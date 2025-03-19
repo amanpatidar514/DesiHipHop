@@ -1,0 +1,51 @@
+/* Rappers Page Styles */
+.rappers-page {
+    background: #000;
+    color: #fff;
+    min-height: 100vh;
+    text-align: center;
+    padding: 40px 0;
+  }
+  
+  h1 {
+    font-size: 50px;
+    color: #ffcc00;
+    margin-bottom: 30px;
+  }
+  
+  .rapper-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .rapper-card {
+    background: #111;
+    border: 2px solid #ffcc00;
+    border-radius: 10px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    overflow: hidden;
+  }
+  
+  .rapper-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #ffcc00;
+  }
+  
+  .rapper-card img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+  }
+  
+  .rapper-card h2 {
+    font-size: 22px;
+    padding: 15px;
+    background: #ffcc00;
+    color: #000;
+    margin: 0;
+  }
+  

@@ -1,0 +1,235 @@
+/* Albums Page Container */
+.albums-page {
+  padding: 40px;
+  background-color: #121212;
+  color: #fff;
+  min-height: 100vh;
+  font-family: 'Arial', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Page Title */
+.albums-page h1 {
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+/* Albums Grid Layout */
+.albums-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+/* All Songs Card Styling */
+.all-songs-card {
+  background: linear-gradient(135deg, #ff8a00, #e52e71);
+  color: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  text-decoration: none;  /* ✅ Remove underline */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.all-songs-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+}
+
+.all-songs-content h2 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.all-songs-content p {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+/* Album Card Styling */
+.album-card {
+  background: #282828;
+  border-radius: 8px;
+  padding: 15px;
+  text-decoration: none;
+  color: white;
+  transition: all 0.3s ease;
+  text-align: center;
+  cursor: pointer;
+}
+
+.album-card:hover {
+  background: #383838;
+  transform: translateY(-5px);
+}
+
+.album-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.album-card h3 {
+  margin: 10px 0 5px;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.album-card p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #b3b3b3;
+  margin: 0 20px 15px;
+  color: #ccc;
+  text-align: center;
+}
+
+/* Loading and Error States */
+.albums-page p {
+  text-align: center;
+  font-size: 18px;
+  color: #ccc;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .albums-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 0 15px;
+  }
+
+  .album-card {
+    max-width: 250px;
+  }
+
+  .album-card img {
+    height: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .albums-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .album-card {
+    max-width: 280px;
+  }
+}
+
+.no-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 220px;
+  background: #444;
+  color: #ccc;
+  font-size: 18px;
+}
+
+.tracks-section {
+  margin-bottom: 40px;
+}
+
+.tracks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.track-card {
+  background: #282828;
+  border-radius: 8px;
+  padding: 15px;
+  text-decoration: none;
+  color: white;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.track-card:hover {
+  background: #383838;
+  transform: translateY(-5px);
+}
+
+.track-card img {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.track-info {
+  flex: 1;
+}
+
+.track-info h3 {
+  margin: 0;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-info p {
+  margin: 5px 0 0;
+  font-size: 14px;
+  color: #b3b3b3;
+}
+
+.albums-section h2,
+.tracks-section h2 {
+  margin: 20px 0;
+  font-size: 24px;
+  color: white;
+  padding-left: 20px;
+}
+
+.popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup-content.dark {
+  background: #282828;
+  padding: 20px;
+  border-radius: 12px;
+  width: 400px;
+}
+
+.close-button {
+  margin-top: 15px;
+  width: 100%;
+  padding: 10px;
+  background: #ff0000;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.close-button:hover {
+  background: #cc0000;
+}
