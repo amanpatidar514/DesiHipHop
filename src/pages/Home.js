@@ -7,7 +7,6 @@ const Home = () => {
 
   const handleStartListening = () => {
     const CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';
-    // Make sure this exactly matches what's in Spotify Dashboard
     const REDIRECT_URI = 'https://amanpatidar514.github.io/DesiHipHop/callback';
     
     const SCOPES = [
@@ -16,17 +15,19 @@ const Home = () => {
       'user-read-private',
       'user-read-playback-state',
       'user-modify-playback-state'
-    ];
+    ].join(' ');
 
-    const params = new URLSearchParams({
-      client_id: CLIENT_ID,
-      response_type: 'token',
-      redirect_uri: REDIRECT_URI,
-      scope: SCOPES.join(' '),
-      show_dialog: true
-    });
+    // Direct authorization URL construction
+    const authUrl = 
+      'https://accounts.spotify.com/authorize' +
+      '?response_type=token' +
+      '&client_id=' + encodeURIComponent(CLIENT_ID) +
+      '&scope=' + encodeURIComponent(SCOPES) +
+      '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
+      '&show_dialog=true';
 
-    window.location.href = 'https://accounts.spotify.com/authorize?' + params.toString();
+    // Simple redirect
+    window.location.href = authUrl;
   };
 
   return (
