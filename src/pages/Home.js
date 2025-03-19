@@ -23,7 +23,7 @@ const Home = () => {
 
       // If not authenticated, initiate Spotify login
       const CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';
-      // Updated redirect URI for GitHub Pages with hash routing
+      // Make sure this exactly matches what's in your Spotify Dashboard
       const REDIRECT_URI = 'https://amanpatidar514.github.io/DesiHipHop/#/callback';
       const SCOPES = [
         'streaming',
