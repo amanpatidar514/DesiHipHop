@@ -39,21 +39,22 @@ const Songs = () => {
   const getYouTubeVideoId = async (songName, artistName) => {
     const searchKey = `${songName}-${artistName}`;
     if (youtubeUrlCache[searchKey]) return youtubeUrlCache[searchKey];
-
+  
     try {
-      const response = await axios.get(
-        `https://www.googleapis.com/youtube/v3/search`,
-        {
-          params: {
-            key: YOUTUBE_API_KEY,
-            part: 'snippet',
-            q: `${songName} ${artistName}`.replace(/,/g, '').trim(),
-            type: 'video',
-            maxResults: 1,
-          },
-        }
-      );
-
+      const query = `${songName} by ${artistName} official audio`
+        .replace(/[^a-zA-Z0-9 ]/g, '') // remove symbols like commas, dashes, etc.
+        .trim();
+  
+      const response = await axios.get(`https://www.googleapis.com/youtube/v3/search`, {
+        params: {
+          key: YOUTUBE_API_KEY,
+          part: 'snippet',
+          q: query,
+          type: 'video',
+          maxResults: 1,
+        },
+      });
+  
       const video = response.data.items[0];
       if (video) {
         const videoId = video.id.videoId;
@@ -64,9 +65,10 @@ const Songs = () => {
     } catch (err) {
       console.error(`YouTube search error for ${songName} - ${artistName}:`, err);
     }
-
+  
     return null;
   };
+  
 
   useEffect(() => {
     const fetchData = async () => {
