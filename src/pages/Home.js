@@ -22,7 +22,8 @@ const Home = () => {
 
       // If not authenticated, initiate Spotify login
       const CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';
-      const REDIRECT_URI = process.env.REACT_APP_REDIRECT_URI;
+      const REDIRECT_URI = 'https://desi-hiphop.vercel.app/callback';
+
 
       const SCOPES = [
         'streaming',
