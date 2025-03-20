@@ -40,9 +40,8 @@ const Albums = () => {
         );
         setAlbums(albumResponse.data.items);
 
-        // Optional: You can set YouTube Channel ID based on artistName (manual mapping or search)
         if (artistName.toLowerCase() === 'drake') {
-          setYoutubeChannelId('UCByOQJjav0CUDwxCk-jVNRQ'); // Example: Drake
+          setYoutubeChannelId('UCByOQJjav0CUDwxCk-jVNRQ'); // Example channel ID for Drake
         }
 
       } catch (err) {
