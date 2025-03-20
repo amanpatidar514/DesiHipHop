@@ -13,8 +13,7 @@ const Songs = () => {
   const [error, setError] = useState('');
   const [albumName, setAlbumName] = useState('');
   const [selectedSong, setSelectedSong] = useState(null);
-  const [audiusTracksCache, setAudiusTracksCache] = useState({});
-  const [popularAudiusTracks, setPopularAudiusTracks] = useState([]);
+  const [audiusStreamUrlCache, setAudiusStreamUrlCache] = useState({});
 
   const refreshSpotifyToken = async () => {
     try {
@@ -27,6 +26,7 @@ const Songs = () => {
         }),
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
+
       const newToken = response.data.access_token;
       localStorage.setItem('spotify_token', newToken);
       return newToken;
@@ -36,35 +36,31 @@ const Songs = () => {
     }
   };
 
-  const searchAudiusTrack = async (query) => {
-    if (audiusTracksCache[query]) {
-      return audiusTracksCache[query];
-    }
+  const getAudiusStreamUrl = async (song) => {
+    const searchKey = `${song.name}-${song.artists}`;
+    if (audiusStreamUrlCache[searchKey]) return audiusStreamUrlCache[searchKey];
 
     try {
-      const response = await axios.get(
-        `https://discoveryprovider.audius.co/v1/tracks/search`,
-        { params: { query, limit: 1 } }
+      const query = encodeURIComponent(`${song.name} ${song.artists}`);
+      const searchRes = await axios.get(`https://api.audius.co/v1/tracks/search?query=${query}&app_name=DesiHipHop`);
+      const matchedTrack = searchRes.data.data.find((track) =>
+        track.title.toLowerCase().includes(song.name.toLowerCase())
       );
-      const track = response.data.data[0];
-      setAudiusTracksCache((prev) => ({ ...prev, [query]: track }));
-      return track;
-    } catch (err) {
-      console.error('Audius search failed for:', query, err);
-      return null;
-    }
-  };
 
-  const fetchPopularAudiusTracks = async () => {
-    try {
-      const response = await axios.get(
-        'https://discoveryprovider.audius.co/v1/tracks/trending',
-        { params: { limit: 6 } }
-      );
-      setPopularAudiusTracks(response.data.data);
+      if (matchedTrack) {
+        const streamRes = await axios.get(`https://api.audius.co/v1/tracks/${matchedTrack.id}/stream`, {
+          responseType: 'blob',
+        });
+        const audioURL = URL.createObjectURL(streamRes.data);
+
+        setAudiusStreamUrlCache((prev) => ({ ...prev, [searchKey]: audioURL }));
+        return audioURL;
+      }
     } catch (err) {
-      console.error('Failed to fetch popular Audius tracks:', err);
+      console.error('Audius search error:', err);
     }
+
+    return null;
   };
 
   useEffect(() => {
@@ -72,22 +68,21 @@ const Songs = () => {
       try {
         setLoading(true);
         setError('');
-
         const token = await refreshSpotifyToken();
         if (!token) throw new Error('Unable to refresh token.');
 
-        // Try to fetch as a single track first
+        // Try track
         try {
-          const trackResponse = await axios.get(`https://api.spotify.com/v1/tracks/${albumId}`, {
+          const trackRes = await axios.get(`https://api.spotify.com/v1/tracks/${albumId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
-          const track = trackResponse.data;
+          const track = trackRes.data;
           setAlbumName(track.album.name);
           setSongs([{
             name: track.name,
             id: track.id,
-            artists: track.artists.map(artist => artist.name).join(', '),
+            artists: track.artists.map((a) => a.name).join(', '),
             albumImage: track.album.images[0]?.url,
           }]);
           return;
@@ -95,22 +90,22 @@ const Songs = () => {
           if (err.response?.status !== 404) throw err;
         }
 
-        // If not a single track, try fetching an album
-        const albumResponse = await axios.get(`https://api.spotify.com/v1/albums/${albumId}`, {
+        // Try album
+        const albumRes = await axios.get(`https://api.spotify.com/v1/albums/${albumId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const album = albumResponse.data;
+        const album = albumRes.data;
         setAlbumName(album.name);
 
-        const trackNames = album.tracks.items.map((track) => ({
+        const trackList = album.tracks.items.map((track) => ({
           name: track.name,
           id: track.id,
-          artists: track.artists.map(artist => artist.name).join(', '),
+          artists: track.artists.map((a) => a.name).join(', '),
           albumImage: album.images[0]?.url,
         }));
 
-        setSongs(trackNames);
+        setSongs(trackList);
       } catch (err) {
         console.error('Error loading songs:', err);
         setError('Failed to load songs. Please try again.');
@@ -122,17 +117,14 @@ const Songs = () => {
     if (albumId) {
       fetchData();
     }
-
-    fetchPopularAudiusTracks();
   }, [albumId]);
 
   const handleSongClick = async (song) => {
-    const query = `${song.name} ${song.artists}`;
-    const audiusTrack = await searchAudiusTrack(query);
-    if (audiusTrack) {
-      setSelectedSong({ ...song, audius: audiusTrack });
+    const audiusUrl = await getAudiusStreamUrl(song);
+    if (audiusUrl) {
+      setSelectedSong({ ...song, audiusUrl });
     } else {
-      alert('Song not available on Audius.');
+      alert('Audius track not found!');
     }
   };
 
@@ -160,7 +152,7 @@ const Songs = () => {
         )}
       </div>
 
-      {selectedSong && selectedSong.audius && (
+      {selectedSong && (
         <div className="popup">
           <div className="popup-content dark">
             <div className="song-info">
@@ -168,11 +160,14 @@ const Songs = () => {
               <p className="artist-name">{selectedSong.artists}</p>
             </div>
 
-            <audio
-              controls
-              autoPlay
-              src={`https://discoveryprovider.audius.co/v1/tracks/${selectedSong.audius.id}/stream`}
-            />
+            {selectedSong.audiusUrl ? (
+              <audio controls autoPlay>
+                <source src={selectedSong.audiusUrl} type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
+            ) : (
+              <p>Loading Audius track...</p>
+            )}
 
             <button onClick={() => setSelectedSong(null)} className="close-button">
               Close
@@ -180,20 +175,6 @@ const Songs = () => {
           </div>
         </div>
       )}
-
-      <h2 className="section-title">Popular Audius Tracks</h2>
-      <div className="songs-grid">
-        {popularAudiusTracks.map((track) => (
-          <div
-            key={track.id}
-            className="song-card"
-            onClick={() => setSelectedSong({ name: track.title, artists: track.user.name, audius: track })}
-          >
-            <h3>{track.title}</h3>
-            <p className="artist-name">{track.user.name}</p>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };
