@@ -47,7 +47,7 @@ const Songs = () => {
           params: {
             key: YOUTUBE_API_KEY,
             part: 'snippet',
-            q: `${songName} ${artistName}`,
+            q: `${songName} ${artistName}`.replace(/,/g, '').trim(),
             type: 'video',
             maxResults: 1,
           },
