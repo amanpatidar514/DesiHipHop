@@ -13,6 +13,7 @@ const Albums = () => {
   const [rapperName, setRapperName] = useState('');
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [youtubeChannelId, setYoutubeChannelId] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,7 +25,8 @@ const Albums = () => {
           `https://api.spotify.com/v1/artists/${rapperId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setRapperName(artistResponse.data.name);
+        const artistName = artistResponse.data.name;
+        setRapperName(artistName);
 
         const tracksResponse = await axios.get(
           `https://api.spotify.com/v1/artists/${rapperId}/top-tracks?market=IN`,
@@ -37,6 +39,11 @@ const Albums = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setAlbums(albumResponse.data.items);
+
+        // Optional: You can set YouTube Channel ID based on artistName (manual mapping or search)
+        if (artistName.toLowerCase() === 'drake') {
+          setYoutubeChannelId('UCByOQJjav0CUDwxCk-jVNRQ'); // Example: Drake
+        }
 
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -86,6 +93,24 @@ const Albums = () => {
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
 
+      {/* All Songs of Artist from YouTube */}
+      {youtubeChannelId && (
+        <div className="youtube-section">
+          <h2>All Songs of {rapperName}</h2>
+          <div className="youtube-videos">
+            <iframe
+              width="100%"
+              height="400"
+              src={`https://www.youtube.com/embed?listType=user_uploads&list=${youtubeChannelId}`}
+              title="YouTube Songs"
+              frameBorder="0"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
+
       {/* Top Tracks Section */}
       <div className="tracks-section">
         <h2>Popular Tracks</h2>
@@ -122,7 +147,7 @@ const Albums = () => {
         </div>
       </div>
 
-      {/* Audio Playback Popup */}
+      {/* Popup Player */}
       {selectedTrack && youtubeUrl && (
         <div className="popup">
           <div className="popup-content dark">
@@ -136,7 +161,6 @@ const Albums = () => {
               <p>{selectedTrack.artists.map(artist => artist.name).join(', ')}</p>
             </div>
 
-            {/* Hidden YouTube iframe for audio playback */}
             <div style={{ width: '1px', height: '1px', overflow: 'hidden' }}>
               <iframe
                 width="1"
@@ -145,6 +169,7 @@ const Albums = () => {
                 title="YouTube Audio"
                 allow="autoplay"
                 frameBorder="0"
+                allowFullScreen
               />
             </div>
 
@@ -154,7 +179,6 @@ const Albums = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };
