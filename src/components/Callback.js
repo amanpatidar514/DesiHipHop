@@ -5,26 +5,38 @@ const Callback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const getHashParams = () => {
-      const hashParams = {};
-      const r = /([^&;=]+)=?([^&;]*)/g;
-      const q = window.location.hash.substring(1);
-      let e;
-      while (e = r.exec(q)) {
-        hashParams[e[1]] = decodeURIComponent(e[2]);
+    const handleCallback = () => {
+      try {
+        // Get the full hash including the #
+        const hash = window.location.hash;
+        
+        // Extract access token using regex
+        const accessTokenMatch = hash.match(/access_token=([^&]*)/);
+        const accessToken = accessTokenMatch ? accessTokenMatch[1] : null;
+
+        if (accessToken) {
+          // Store the token
+          localStorage.setItem('spotify_access_token', accessToken);
+          
+          // Clear the URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          // Navigate to rappers page using full path
+          window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/rappers';
+        } else {
+          // If no token, go back to home
+          window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/';
+        }
+      } catch (error) {
+        console.error('Error in callback:', error);
+        window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/';
       }
-      return hashParams;
     };
 
-    const params = getHashParams();
-    if (params.access_token) {
-      localStorage.setItem('spotify_access_token', params.access_token);
-      navigate('/rappers');
-    } else {
-      navigate('/');
-    }
+    handleCallback();
   }, [navigate]);
 
+  // Loading screen
   return (
     <div style={{
       height: '100vh',
@@ -32,9 +44,12 @@ const Callback = () => {
       justifyContent: 'center',
       alignItems: 'center',
       background: '#000',
-      color: '#fff'
+      color: '#fff',
+      flexDirection: 'column',
+      gap: '20px'
     }}>
       <h2>Connecting to Spotify...</h2>
+      <div style={{ fontSize: '14px', opacity: 0.8 }}>Please wait while we set up your session</div>
     </div>
   );
 };

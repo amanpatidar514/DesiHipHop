@@ -17,7 +17,6 @@ const Home = () => {
       'user-modify-playback-state'
     ].join(' ');
 
-    // Direct authorization URL construction
     const authUrl = 
       'https://accounts.spotify.com/authorize' +
       '?response_type=token' +
@@ -26,7 +25,9 @@ const Home = () => {
       '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
       '&show_dialog=true';
 
-    // Simple redirect
+    // Log the URL for debugging
+    console.log("Redirecting to:", authUrl);
+    
     window.location.href = authUrl;
   };
 
