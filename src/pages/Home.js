@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../pages/Home.css';
 
@@ -15,28 +15,30 @@ const Home = () => {
 
   const handleStartListening = () => {
     const CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';
-    const REDIRECT_URI = 'https://amanpatidar514.github.io/DesiHipHop/#/callback';
+    // Remove hash routing from callback URL
+    const REDIRECT_URI = 'https://amanpatidar514.github.io/DesiHipHop/callback';
     
     const SCOPES = [
-      'streaming',
       'user-read-email',
       'user-read-private',
       'user-read-playback-state',
       'user-modify-playback-state'
     ].join(' ');
 
-    // Use URLSearchParams for better parameter handling
-    const params = new URLSearchParams({
+    // Build auth URL
+    const params = {
       client_id: CLIENT_ID,
-      response_type: 'token',
       redirect_uri: REDIRECT_URI,
       scope: SCOPES,
+      response_type: 'token',
       show_dialog: true
-    });
+    };
 
-    const authUrl = 'https://accounts.spotify.com/authorize?' + params.toString();
-    
-    // Use a simple redirect
+    const authUrl = 'https://accounts.spotify.com/authorize?' + 
+      Object.keys(params)
+        .map(key => `${key}=${encodeURIComponent(params[key])}`)
+        .join('&');
+
     window.location.href = authUrl;
   };
 
@@ -45,14 +47,8 @@ const Home = () => {
       <div className="content">
         <div className="logo">
           <img 
-            src={`${process.env.PUBLIC_URL}/images/logo.jpeg`}
+            src={require('./logo.jpeg')}
             alt="Desi Hip-Hop Logo" 
-            style={{ 
-              width: '150px', 
-              height: '150px',
-              borderRadius: '50%',
-              objectFit: 'cover'
-            }}
           />
         </div>
         <h1>Desi Hip-Hop</h1>

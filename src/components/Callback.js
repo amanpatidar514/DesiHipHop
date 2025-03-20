@@ -2,36 +2,25 @@ import { useEffect } from 'react';
 
 const Callback = () => {
   useEffect(() => {
-    const handleCallback = () => {
-      try {
-        // Get token from URL without using regex
-        const params = new URLSearchParams(
-          window.location.hash.substring(1) // Remove the # character
-        );
-        const accessToken = params.get('access_token');
-        console.log("Token found:", accessToken ? 'Yes' : 'No');
-
-        if (accessToken) {
-          // Store token
-          localStorage.setItem('spotify_access_token', accessToken);
-          
-          // Clear the URL hash
-          window.history.pushState({}, document.title, '/');
-          
-          // Redirect to rappers page
-          setTimeout(() => {
-            window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/rappers';
-          }, 1000);
-        } else {
-          window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/';
-        }
-      } catch (error) {
-        console.error("Callback error:", error);
-        window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/';
-      }
+    const getTokenFromUrl = () => {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      return params.get('access_token');
     };
 
-    handleCallback();
+    try {
+      const token = getTokenFromUrl();
+      if (token) {
+        localStorage.setItem('spotify_access_token', token);
+        // Redirect to rappers page without hash routing
+        window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/rappers';
+      } else {
+        window.location.href = 'https://amanpatidar514.github.io/DesiHipHop';
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+      window.location.href = 'https://amanpatidar514.github.io/DesiHipHop';
+    }
   }, []);
 
   // Loading screen
