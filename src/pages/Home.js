@@ -1,48 +1,51 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../pages/Home.css';
 import logo from '../images/logo.jpeg';
 
 const Home = () => {
   const navigate = useNavigate();
+  // const audio = new Audio(notificationSound);
 
-  // Check if already authenticated
-  useEffect(() => {
-    const token = localStorage.getItem('spotify_access_token');
-    if (token) {
-      navigate('/rappers');
+  const handleStartListening = async () => {
+    try {
+      // await audio.play();
+      
+      // Check if user is already authenticated
+      const token = localStorage.getItem('spotify_access_token');
+      
+      if (token) {
+        // If already authenticated, go directly to rappers page
+        navigate('/rappers');
+        return;
+      }
+
+      // If not authenticated, initiate Spotify login
+      const CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';
+      const REDIRECT_URI = 'http://localhost:3000/callback';
+      const SCOPES = [
+        'streaming',
+        'user-read-email',
+        'user-read-private',
+        'user-read-playback-state',
+        'user-modify-playback-state',
+        'user-library-read',
+        'user-library-modify'
+      ];
+
+      const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES.join(' '))}&show_dialog=true`;
+
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error("Error:", error);
     }
-  }, [navigate]);
-
-  const handleStartListening = () => {
-    const CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';
-    const REDIRECT_URI = 'https://amanpatidar514.github.io/DesiHipHop/#/callback';
-
-    const SCOPES = [
-      'user-read-private',
-      'user-read-email'
-    ];
-
-    // Simplified URL construction
-    const authEndpoint = 'https://accounts.spotify.com/authorize';
-    const queryParams = new URLSearchParams({
-      client_id: CLIENT_ID,
-      response_type: 'token',
-      redirect_uri: REDIRECT_URI,
-      scope: SCOPES.join(' ')
-    }).toString();
-
-    window.location.href = `${authEndpoint}?${queryParams}`;
   };
 
   return (
     <div className="homepage">
       <div className="content">
         <div className="logo">
-          <img 
-            src={logo}
-            alt="Desi Hip-Hop Logo" 
-          />
+          <img src={logo} alt="Desi Hip-Hop Logo" />
         </div>
         <h1>Desi Hip-Hop</h1>
         <div className="navigate-box">
