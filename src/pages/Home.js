@@ -33,9 +33,7 @@ const Home = () => {
       '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
       '&show_dialog=true';
 
-    // Log the URL for debugging
-    console.log("Redirecting to:", authUrl);
-    
+    console.log("Auth URL:", authUrl); // Debug log
     window.location.href = authUrl;
   };
 
