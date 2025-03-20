@@ -13,6 +13,7 @@ const Songs = () => {
   const [error, setError] = useState('');
   const [albumName, setAlbumName] = useState('');
   const [selectedSong, setSelectedSong] = useState(null);
+  const [audioSrc, setAudioSrc] = useState('');
 
   const refreshSpotifyToken = async () => {
     try {
@@ -25,7 +26,6 @@ const Songs = () => {
         }),
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
-
       const newToken = response.data.access_token;
       localStorage.setItem('spotify_token', newToken);
       return newToken;
@@ -44,14 +44,13 @@ const Songs = () => {
         const token = await refreshSpotifyToken();
         if (!token) throw new Error('Unable to refresh token.');
 
-        // First try to fetch as a track (for single songs)
+        // Try track
         try {
-          const trackResponse = await axios.get(`https://api.spotify.com/v1/tracks/${albumId}`, {
+          const trackRes = await axios.get(`https://api.spotify.com/v1/tracks/${albumId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
-          // If successful, it's a single track
-          const track = trackResponse.data;
+          const track = trackRes.data;
           setAlbumName(track.album.name);
           setSongs([{
             name: track.name,
@@ -61,26 +60,24 @@ const Songs = () => {
           }]);
           return;
         } catch (err) {
-          // If 404, it might be an album ID instead
           if (err.response?.status !== 404) throw err;
         }
 
-        // If track fetch failed, try fetching as album
-        const albumResponse = await axios.get(`https://api.spotify.com/v1/albums/${albumId}`, {
+        // Try album
+        const albumRes = await axios.get(`https://api.spotify.com/v1/albums/${albumId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const album = albumResponse.data;
+        const album = albumRes.data;
         setAlbumName(album.name);
-
-        const trackNames = album.tracks.items.map((track) => ({
+        const tracks = album.tracks.items.map((track) => ({
           name: track.name,
           id: track.id,
           artists: track.artists.map(artist => artist.name).join(', '),
           albumImage: album.images[0]?.url,
         }));
+        setSongs(tracks);
 
-        setSongs(trackNames);
       } catch (err) {
         console.error('Error loading songs:', err);
         setError('Failed to load songs. Please try again.');
@@ -89,13 +86,28 @@ const Songs = () => {
       }
     };
 
-    if (albumId) {
-      fetchData();
-    }
+    if (albumId) fetchData();
   }, [albumId]);
 
-  const handleSongClick = (song) => {
+  const handleSongClick = async (song) => {
     setSelectedSong(song);
+    setAudioSrc('');
+
+    try {
+      const encodedName = encodeURIComponent(song.name);
+      const res = await axios.get(`https://discoveryprovider.audius.co/v1/tracks/search?query=${encodedName}&limit=1`);
+      const audiusTrack = res.data.data[0];
+
+      if (audiusTrack) {
+        const streamUrl = `https://discoveryprovider.audius.co/v1/tracks/${audiusTrack.id}/stream`;
+        setAudioSrc(streamUrl);
+      } else {
+        setAudioSrc(null);
+      }
+    } catch (err) {
+      console.error('Error fetching from Audius:', err);
+      setAudioSrc(null);
+    }
   };
 
   return (
@@ -129,17 +141,16 @@ const Songs = () => {
               <h2>{selectedSong.name}</h2>
               <p className="artist-name">{selectedSong.artists}</p>
             </div>
-            
-            <iframe
-              src={`https://open.spotify.com/embed/track/${selectedSong.id}`}
-              width="100%"
-              height="152"
-              frameBorder="0"
-              allowtransparency="true"
-              allow="encrypted-media"
-              title="Spotify Player"
-            />
-            
+
+            {audioSrc === '' && <p>Loading Audius stream...</p>}
+            {audioSrc === null && <p>Track not available on Audius.</p>}
+            {audioSrc && (
+              <audio controls autoPlay style={{ width: '100%' }}>
+                <source src={audioSrc} type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
+            )}
+
             <button onClick={() => setSelectedSong(null)} className="close-button">
               Close
             </button>
