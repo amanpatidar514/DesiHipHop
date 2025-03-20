@@ -122,39 +122,39 @@ const Albums = () => {
         </div>
       </div>
 
-      {/* Popup Player for Tracks */}
+    
       {selectedTrack && youtubeUrl && (
-  <div className="popup">
-    <div className="popup-content dark">
-      <div className="song-info">
-        <img 
-          src={selectedTrack.album.images[0]?.url} 
-          alt={selectedTrack.name} 
-          className="track-image"
-        />
-        <h3>{selectedTrack.name}</h3>
-        <p>{selectedTrack.artists.map(artist => artist.name).join(', ')}</p>
-      </div>
+        <div className="popup">
+          <div className="popup-content dark">
+            <div className="song-info">
+              <img
+                src={selectedTrack.album.images[0]?.url}
+                alt={selectedTrack.name}
+                className="track-image"
+              />
+              <h3>{selectedTrack.name}</h3>
+              <p>{selectedTrack.artists.map(artist => artist.name).join(', ')}</p>
+            </div>
 
-      {/* Hidden but functional YouTube player */}
-      <div style={{ width: '1px', height: '1px', overflow: 'hidden' }}>
-        <iframe
-          width="1"
-          height="1"
-          src={youtubeUrl}
-          title="YouTube Audio"
-          allow="autoplay"
-          frameBorder="0"
-          allowFullScreen
-        />
-      </div>
+            
+            <div style={{ width: '1px', height: '1px', overflow: 'hidden' }}>
+              <iframe
+                width="1"
+                height="1"
+                src={youtubeUrl}
+                title="YouTube Audio"
+                allow="autoplay"
+                frameBorder="0"
+                allowFullScreen
+              />
+            </div>
 
-      <button onClick={() => setSelectedTrack(null)} className="close-button">
-        Close
-      </button>
-    </div>
-  </div>
-)}
+            <button onClick={() => setSelectedTrack(null)} className="close-button">
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
