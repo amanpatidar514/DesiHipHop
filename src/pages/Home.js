@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../pages/Home.css';
+import logo from '../images/logo.jpeg';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ const Home = () => {
       <div className="content">
         <div className="logo">
           <img 
-            src={require('../images/logo.jpeg')}
+            src={logo}
             alt="Desi Hip-Hop Logo" 
           />
         </div>
