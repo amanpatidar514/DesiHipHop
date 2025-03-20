@@ -47,7 +47,7 @@ const Home = () => {
       <div className="content">
         <div className="logo">
           <img 
-            src={require('./logo.jpeg')}
+            src={require('../images/logo.jpeg')}
             alt="Desi Hip-Hop Logo" 
           />
         </div>
