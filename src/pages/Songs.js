@@ -15,6 +15,7 @@ const Songs = () => {
   const [albumName, setAlbumName] = useState('');
   const [selectedSong, setSelectedSong] = useState(null);
   const [youtubeUrlCache, setYoutubeUrlCache] = useState({});
+  const [showYouTubeGrid, setShowYouTubeGrid] = useState(false);
 
   const refreshSpotifyToken = async () => {
     try {
@@ -47,7 +48,7 @@ const Songs = () => {
 
       const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
         params: {
-          key: YOUTUBE_API_KEY,
+          key: AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg,
           part: 'snippet',
           q: query,
           type: 'video',
@@ -124,6 +125,10 @@ const Songs = () => {
     }
   };
 
+  const handleYouTubeBoxClick = () => {
+    setShowYouTubeGrid((prev) => !prev);
+  };
+
   return (
     <div className="songs-page">
       <h1>{albumName ? `${albumName} Songs` : 'Songs'}</h1>
@@ -140,6 +145,32 @@ const Songs = () => {
         ))}
       </div>
 
+      {/* Box to open YouTube Grid */}
+      <div className="song-card youtube-toggle-card" onClick={handleYouTubeBoxClick}>
+        <h2>All YouTube Songs</h2>
+        <p>Click to {showYouTubeGrid ? 'hide' : 'view'} official YouTube videos</p>
+      </div>
+
+      {/* Conditional YouTube Grid */}
+      {showYouTubeGrid && (
+        <div className="youtube-grid">
+          {songs.map((song, index) => (
+            <div key={index} className="youtube-video">
+              <iframe
+                width="100%"
+                height="200"
+                src={`https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(song.name + ' ' + song.artists)}&autoplay=0`}
+                frameBorder="0"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                title={`YouTube ${song.name}`}
+              ></iframe>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Popup Player */}
       {selectedSong && selectedSong.youtubeUrl && (
         <div className="popup">
           <div className="popup-content dark">
