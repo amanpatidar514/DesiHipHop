@@ -5,6 +5,7 @@ import './Songs.css';
 
 const SPOTIFY_CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';
 const SPOTIFY_CLIENT_SECRET = 'b66594a7b0b74f2d8ebce2e715418bbc';
+const YOUTUBE_API_KEY = 'YOUR_YOUTUBE_API_KEY'; // 🔁 Replace this with your real YouTube API key
 
 const Songs = () => {
   const { albumId } = useParams();
@@ -13,7 +14,7 @@ const Songs = () => {
   const [error, setError] = useState('');
   const [albumName, setAlbumName] = useState('');
   const [selectedSong, setSelectedSong] = useState(null);
-  const [youtubeVideoId, setYoutubeVideoId] = useState('');
+  const [youtubeUrlCache, setYoutubeUrlCache] = useState({});
 
   const refreshSpotifyToken = async () => {
     try {
@@ -26,100 +27,97 @@ const Songs = () => {
         }),
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
-
       const newToken = response.data.access_token;
       localStorage.setItem('spotify_token', newToken);
       return newToken;
     } catch (err) {
-      console.error('Failed to refresh Spotify token:', err);
+      console.error('Spotify token refresh failed:', err);
       return null;
     }
   };
 
-  const fetchYouTubeVideoId = async (trackName, artistName) => {
-    const query = encodeURIComponent(`${trackName} ${artistName}`);
+  const getYouTubeVideoId = async (songName, artistName) => {
+    const searchKey = `${songName}-${artistName}`;
+    if (youtubeUrlCache[searchKey]) return youtubeUrlCache[searchKey];
+
     try {
       const response = await axios.get(
         `https://www.googleapis.com/youtube/v3/search`,
         {
           params: {
+            key: YOUTUBE_API_KEY,
             part: 'snippet',
-            q: query,
+            q: `${songName} ${artistName}`,
+            type: 'video',
             maxResults: 1,
-            key: 'AIzaSyBJuSBqKk36m9bgt7-OB3uNmhOmLaPOGSU',
           },
         }
       );
 
-      const videoId = response.data.items[0]?.id?.videoId;
-      return videoId || '';
+      const video = response.data.items[0];
+      if (video) {
+        const videoId = video.id.videoId;
+        const youtubeUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        setYoutubeUrlCache((prev) => ({ ...prev, [searchKey]: youtubeUrl }));
+        return youtubeUrl;
+      }
     } catch (err) {
-      console.error('Error fetching YouTube video ID:', err);
-      return '';
+      console.error(`YouTube search error for ${songName} - ${artistName}:`, err);
     }
+
+    return null;
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setError('');
         const token = await refreshSpotifyToken();
-        if (!token) throw new Error('Unable to refresh token.');
+        if (!token) throw new Error('Spotify token issue');
 
-        try {
-          const trackRes = await axios.get(`https://api.spotify.com/v1/tracks/${albumId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          const track = trackRes.data;
-          setAlbumName(track.album.name);
-          setSongs([
-            {
-              name: track.name,
-              id: track.id,
-              artists: track.artists.map((a) => a.name).join(', '),
-              albumImage: track.album.images[0]?.url,
-            },
-          ]);
-          return;
-        } catch (err) {
-          if (err.response?.status !== 404) throw err;
-        }
-
-        const albumRes = await axios.get(`https://api.spotify.com/v1/albums/${albumId}`, {
+        const trackRes = await axios.get(`https://api.spotify.com/v1/tracks/${albumId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const album = albumRes.data;
-        setAlbumName(album.name);
-
-        const trackList = album.tracks.items.map((track) => ({
+        const track = trackRes.data;
+        setAlbumName(track.album.name);
+        setSongs([{
           name: track.name,
           id: track.id,
-          artists: track.artists.map((a) => a.name).join(', '),
-          albumImage: album.images[0]?.url,
-        }));
-
-        setSongs(trackList);
+          artists: track.artists.map(a => a.name).join(', '),
+          albumImage: track.album.images[0]?.url,
+        }]);
       } catch (err) {
-        console.error('Error loading songs:', err);
-        setError('Failed to load songs. Please try again.');
-      } finally {
-        setLoading(false);
+        try {
+          const token = await refreshSpotifyToken();
+          const albumRes = await axios.get(`https://api.spotify.com/v1/albums/${albumId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          const album = albumRes.data;
+          setAlbumName(album.name);
+          setSongs(album.tracks.items.map(track => ({
+            name: track.name,
+            id: track.id,
+            artists: track.artists.map(a => a.name).join(', '),
+            albumImage: album.images[0]?.url,
+          })));
+        } catch (innerErr) {
+          console.error('Error loading songs:', innerErr);
+          setError('Failed to load songs.');
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
-    if (albumId) {
-      fetchData();
-    }
+    fetchData();
   }, [albumId]);
 
   const handleSongClick = async (song) => {
-    const videoId = await fetchYouTubeVideoId(song.name, song.artists);
-    if (videoId) {
-      setYoutubeVideoId(videoId);
-      setSelectedSong(song);
+    const youtubeUrl = await getYouTubeVideoId(song.name, song.artists);
+    if (youtubeUrl) {
+      setSelectedSong({ ...song, youtubeUrl });
     } else {
       alert('YouTube video not found!');
     }
@@ -127,46 +125,35 @@ const Songs = () => {
 
   return (
     <div className="songs-page">
-      <h1>{albumName ? `${albumName} Songs` : 'Album Songs'}</h1>
+      <h1>{albumName ? `${albumName} Songs` : 'Songs'}</h1>
 
       {loading && <p>Loading...</p>}
       {error && <p className="error">{error}</p>}
 
       <div className="songs-grid">
-        {songs.length > 0 ? (
-          songs.map((song) => (
-            <div
-              key={song.id}
-              className="song-card"
-              onClick={() => handleSongClick(song)}
-            >
-              <h2>{song.name}</h2>
-              <p className="artist-name">{song.artists}</p>
-            </div>
-          ))
-        ) : (
-          !loading && <p>No songs found.</p>
-        )}
+        {songs.map(song => (
+          <div key={song.id} className="song-card" onClick={() => handleSongClick(song)}>
+            <h2>{song.name}</h2>
+            <p className="artist-name">{song.artists}</p>
+          </div>
+        ))}
       </div>
 
-      {selectedSong && youtubeVideoId && (
+      {selectedSong && selectedSong.youtubeUrl && (
         <div className="popup">
           <div className="popup-content dark">
-            <div className="song-info">
-              <h2>{selectedSong.name}</h2>
-              <p className="artist-name">{selectedSong.artists}</p>
-            </div>
+            <h2>{selectedSong.name}</h2>
+            <p className="artist-name">{selectedSong.artists}</p>
 
-            <div className="youtube-audio-wrapper">
+            <div style={{ display: 'none' }}>
               <iframe
-                title="YouTube Music"
                 width="0"
                 height="0"
-                src={`https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1`}
-                frameBorder="0"
+                src={selectedSong.youtubeUrl}
                 allow="autoplay"
-                allowFullScreen
-              ></iframe>
+                frameBorder="0"
+                title="YouTube Audio"
+              />
             </div>
 
             <button onClick={() => setSelectedSong(null)} className="close-button">
