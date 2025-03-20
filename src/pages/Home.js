@@ -7,7 +7,7 @@ const Home = () => {
 
   const handleStartListening = () => {
     const CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';
-    const REDIRECT_URI = 'https://amanpatidar514.github.io/DesiHipHop/callback';
+    const REDIRECT_URI = 'https://amanpatidar514.github.io/DesiHipHop/#/callback';
     
     const SCOPES = [
       'streaming',
@@ -34,7 +34,10 @@ const Home = () => {
     <div className="homepage">
       <div className="content">
         <div className="logo">
-          <img src={process.env.PUBLIC_URL + '/images/logo.jpeg'} alt="Desi Hip-Hop Logo" />
+          <img 
+            src={`${process.env.PUBLIC_URL}/images/logo.jpeg`} 
+            alt="Desi Hip-Hop Logo" 
+          />
         </div>
         <h1>Desi Hip-Hop</h1>
         <div className="navigate-box">

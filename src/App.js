@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Callback from './components/Callback';
 import Rappers from './pages/Rappers';
@@ -7,9 +7,9 @@ import Songs from './pages/Songs';
 
 function App() {
   return (
-    <Router>
+    <Router basename="/">
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route exact path="/" element={<Home />} />
         <Route path="/callback" element={<Callback />} />
         <Route path="/rappers" element={<Rappers />} />
         <Route path="/albums/:rapperId" element={<Albums />} />
