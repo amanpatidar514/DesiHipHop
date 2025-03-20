@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 import getSpotifyToken from './getSpotifyToken';
@@ -13,6 +13,8 @@ const Albums = () => {
   const [rapperName, setRapperName] = useState('');
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [youtubeAudioUrl, setYoutubeAudioUrl] = useState('');
+  const playerRef = useRef(null);
+  const [volume, setVolume] = useState(50);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +39,7 @@ const Albums = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setAlbums(albumResponse.data.items);
+
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load content. Please try again.');
@@ -75,7 +78,31 @@ const Albums = () => {
   const handleTrackClick = async (track) => {
     setSelectedTrack(track);
     const ytUrl = await fetchYouTubeAudio(track.name, track.artists[0].name);
+    const videoId = ytUrl.split("v=")[1];
     setYoutubeAudioUrl(ytUrl);
+
+    if (!window.YT) {
+      const tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.body.appendChild(tag);
+    }
+
+    window.onYouTubeIframeAPIReady = () => {
+      playerRef.current = new window.YT.Player('youtube-player', {
+        height: '1',
+        width: '1',
+        videoId,
+        playerVars: {
+          autoplay: 1,
+        },
+        events: {
+          onReady: (event) => {
+            event.target.setVolume(volume);
+            event.target.playVideo();
+          }
+        }
+      });
+    };
   };
 
   return (
@@ -85,7 +112,6 @@ const Albums = () => {
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
 
-      {/* Top Tracks Section */}
       <div className="tracks-section">
         <h2>Popular Tracks</h2>
         <div className="albums-grid">
@@ -103,7 +129,6 @@ const Albums = () => {
         </div>
       </div>
 
-      {/* Albums Section */}
       <div className="albums-section">
         <h2>Albums</h2>
         <div className="albums-grid">
@@ -121,7 +146,6 @@ const Albums = () => {
         </div>
       </div>
 
-      {/* Popup Player */}
       {selectedTrack && youtubeAudioUrl && (
         <div className="popup">
           <div className="popup-content dark">
@@ -135,16 +159,21 @@ const Albums = () => {
               <p>{selectedTrack.artists.map(artist => artist.name).join(', ')}</p>
             </div>
 
-            {/* Hidden YouTube iframe for audio-only */}
-            <div style={{ width: '1px', height: '1px', overflow: 'hidden' }}>
-              <iframe
-                width="1"
-                height="1"
-                src={youtubeAudioUrl.replace("watch?v=", "embed/") + "?autoplay=1"}
-                title="YouTube Audio"
-                allow="autoplay"
-                frameBorder="0"
-                allowFullScreen
+            <div id="youtube-player" style={{ display: 'none' }}></div>
+
+            <div className="custom-controls">
+              <button onClick={() => playerRef.current?.playVideo()}>▶️ Play</button>
+              <button onClick={() => playerRef.current?.pauseVideo()}>⏸ Pause</button>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={volume}
+                onChange={(e) => {
+                  const newVolume = parseInt(e.target.value);
+                  setVolume(newVolume);
+                  playerRef.current?.setVolume(newVolume);
+                }}
               />
             </div>
 
