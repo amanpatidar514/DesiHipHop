@@ -5,7 +5,7 @@ import './Songs.css';
 
 const SPOTIFY_CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';
 const SPOTIFY_CLIENT_SECRET = 'b66594a7b0b74f2d8ebce2e715418bbc';
-const YOUTUBE_API_KEY = 'AIzaSyBJuSBqKk36m9bgt7-OB3uNmhOmLaPOGSU'; // 🔁 Replace this with your real YouTube API key
+const YOUTUBE_API_KEY = 'AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg'; // 🔁 Replace this with your real YouTube API key
 
 const Songs = () => {
   const { albumId } = useParams();
