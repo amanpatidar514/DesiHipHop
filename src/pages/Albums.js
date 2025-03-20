@@ -54,7 +54,7 @@ const Albums = () => {
       const query = `${trackName} ${artistName}`;
       const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
         params: {
-          key: 'AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg', // replace with your real YouTube API key
+          key: 'AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg',
           part: 'snippet',
           q: query,
           type: 'video',
@@ -135,14 +135,21 @@ const Albums = () => {
               <h3>{selectedTrack.name}</h3>
               <p>{selectedTrack.artists.map(artist => artist.name).join(', ')}</p>
             </div>
-            <div className="audio-player">
+            <div className="audio-player" style={{
+              background: 'linear-gradient(135deg, #1db954, #191414)',
+              padding: '1rem',
+              borderRadius: '1rem',
+              display: 'flex',
+              justifyContent: 'center'
+            }}>
               <iframe
-                width="0"
-                height="0"
+                width="100%"
+                height="80"
                 src={youtubeUrl}
                 title="YouTube Audio"
                 allow="autoplay"
                 frameBorder="0"
+                style={{ borderRadius: '1rem' }}
               />
             </div>
             <button onClick={() => setSelectedTrack(null)} className="close-button">
