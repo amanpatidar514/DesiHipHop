@@ -1,124 +1,87 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './Rappers.css';
-
-const SPOTIFY_CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';
-const SPOTIFY_CLIENT_SECRET = 'b66594a7b0b74f2d8ebce2e715418bbc';
 
 const Rappers = () => {
   const [rappers, setRappers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const refreshSpotifyToken = async () => {
-    try {
-      const response = await axios.post(
-        'https://accounts.spotify.com/api/token',
-        new URLSearchParams({
-          grant_type: 'client_credentials',
-          client_id: SPOTIFY_CLIENT_ID,
-          client_secret: SPOTIFY_CLIENT_SECRET,
-        }),
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-      );
-
-      return response.data.access_token;
-    } catch (err) {
-      console.error('Failed to refresh token:', err);
-      return null;
-    }
-  };
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRappers = async () => {
+      const token = localStorage.getItem('spotify_access_token');
+      
+      if (!token) {
+        navigate('/');
+        return;
+      }
+
       try {
-        setLoading(true);
-        const token = await refreshSpotifyToken();
-        if (!token) throw new Error('Failed to get access token');
-
-        // First, get some known Indian hip-hop artists
-        const indianRappers = [
-          'Divine', 'Raftaar', 'Badshah', 'Yo Yo Honey Singh', 
-          'MC Stan', 'Seedhe Maut', 'Prabh Deep', 'Kr$na',
-          'EPR', 'Karma', 'King',
-          'Talha Anjum',   // Add Talha Anjum
-          'Loka',          // Add Loka
-          'Ikka',          // Add Ikka
-          'Young Stunner'  // Add Young Stunner
-        ];
-        
-
-        // Search for each rapper
-        const rappersData = await Promise.all(
-          indianRappers.map(async (rapperName) => {
-            try {
-              const response = await axios.get(
-                `https://api.spotify.com/v1/search`,
-                {
-                  params: {
-                    q: rapperName,
-                    type: 'artist',
-                    market: 'IN',
-                    limit: 1
-                  },
-                  headers: { Authorization: `Bearer ${token}` }
-                }
-              );
-
-              const artist = response.data.artists.items[0];
-              if (!artist) return null;
-
-              return {
-                id: artist.id,
-                name: artist.name,
-                image: artist.images[0]?.url || '/default-artist.jpg',
-                followers: artist.followers.total,
-                popularity: artist.popularity
-              };
-            } catch (error) {
-              console.error(`Error fetching ${rapperName}:`, error);
-              return null;
+        // Search for hip-hop artists
+        const response = await fetch(
+          'https://api.spotify.com/v1/search?q=genre:hip-hop%20indian&type=artist&limit=20',
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
             }
-          })
+          }
         );
 
-        // Filter out null values and sort by popularity
-        const validRappers = rappersData
-          .filter(rapper => rapper !== null)
-          .sort((a, b) => b.popularity - a.popularity);
+        if (!response.ok) {
+          throw new Error('Failed to fetch rappers');
+        }
 
-        setRappers(validRappers);
+        const data = await response.json();
+        const filteredRappers = data.artists.items.filter(artist => 
+          artist.popularity > 20 && artist.images.length > 0
+        );
+
+        setRappers(filteredRappers);
+        setLoading(false);
       } catch (err) {
         console.error('Error fetching rappers:', err);
-        setError('Failed to load rappers. Please try again.');
-      } finally {
+        setError('Failed to load rappers');
         setLoading(false);
       }
     };
 
     fetchRappers();
-  }, []);
+  }, [navigate]);
 
-  if (loading) return <div className="rappers-page"><h1>Loading...</h1></div>;
-  if (error) return <div className="rappers-page"><h1>{error}</h1></div>;
+  if (loading) {
+    return (
+      <div className="rappers-loading">
+        <h2>Loading Rappers...</h2>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rappers-error">
+        <h2>{error}</h2>
+        <button onClick={() => navigate('/')}>Go Back</button>
+      </div>
+    );
+  }
 
   return (
     <div className="rappers-page">
       <h1>Popular Hip-Hop Artists</h1>
-      {rappers.length > 0 ? (
-        <div className="rappers-grid">
-          {rappers.map((rapper) => (
-            <Link key={rapper.id} to={`/albums/${rapper.id}`} className="rapper-card">
-              <img src={rapper.image} alt={rapper.name} />
-              <h2>{rapper.name}</h2>
-              <p>{rapper.followers.toLocaleString()} followers</p>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <p className="no-results">No artists found</p>
-      )}
+      <div className="rappers-grid">
+        {rappers.map(rapper => (
+          <div key={rapper.id} className="rapper-card">
+            <img 
+              src={rapper.images[0]?.url} 
+              alt={rapper.name}
+              className="rapper-image"
+            />
+            <h3>{rapper.name}</h3>
+            <p>Followers: {rapper.followers.total.toLocaleString()}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
