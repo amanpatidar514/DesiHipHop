@@ -36,31 +36,32 @@ const Songs = () => {
     }
   };
 
-  const getAudiusStreamUrl = async (song) => {
-    const searchKey = `${song.name}-${song.artists}`;
-    if (audiusStreamUrlCache[searchKey]) return audiusStreamUrlCache[searchKey];
-
+  const fetchAudiusTrackUrl = async (trackName, artistName) => {
     try {
-      const query = encodeURIComponent(`${song.name} ${song.artists}`);
-      const searchRes = await axios.get(`https://api.audius.co/v1/tracks/search?query=${query}&app_name=DesiHipHop`);
-      const matchedTrack = searchRes.data.data.find((track) =>
-        track.title.toLowerCase().includes(song.name.toLowerCase())
-      );
+      const searchQuery = `${trackName} ${artistName}`;
+      const response = await axios.get(`https://discoveryprovider.audius.co/v1/tracks/search`, {
+        params: {
+          query: searchQuery,
+          limit: 5,
+        },
+      });
 
-      if (matchedTrack) {
-        const streamRes = await axios.get(`https://api.audius.co/v1/tracks/${matchedTrack.id}/stream`, {
-          responseType: 'blob',
-        });
-        const audioURL = URL.createObjectURL(streamRes.data);
+      const results = response.data.data;
 
-        setAudiusStreamUrlCache((prev) => ({ ...prev, [searchKey]: audioURL }));
-        return audioURL;
+      if (results && results.length > 0) {
+        const bestMatch = results.find(track =>
+          track.title.toLowerCase().includes(trackName.toLowerCase()) &&
+          track.user.name.toLowerCase().includes(artistName.toLowerCase())
+        ) || results[0];
+
+        return bestMatch.stream_url || '';
       }
-    } catch (err) {
-      console.error('Audius search error:', err);
-    }
 
-    return null;
+      return '';
+    } catch (error) {
+      console.error(`Error fetching Audius track for "${trackName} - ${artistName}":`, error);
+      return '';
+    }
   };
 
   useEffect(() => {
@@ -71,7 +72,6 @@ const Songs = () => {
         const token = await refreshSpotifyToken();
         if (!token) throw new Error('Unable to refresh token.');
 
-        // Try track
         try {
           const trackRes = await axios.get(`https://api.spotify.com/v1/tracks/${albumId}`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -90,7 +90,6 @@ const Songs = () => {
           if (err.response?.status !== 404) throw err;
         }
 
-        // Try album
         const albumRes = await axios.get(`https://api.spotify.com/v1/albums/${albumId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -120,8 +119,15 @@ const Songs = () => {
   }, [albumId]);
 
   const handleSongClick = async (song) => {
-    const audiusUrl = await getAudiusStreamUrl(song);
+    const searchKey = `${song.name}-${song.artists}`;
+    if (audiusStreamUrlCache[searchKey]) {
+      setSelectedSong({ ...song, audiusUrl: audiusStreamUrlCache[searchKey] });
+      return;
+    }
+
+    const audiusUrl = await fetchAudiusTrackUrl(song.name, song.artists);
     if (audiusUrl) {
+      setAudiusStreamUrlCache(prev => ({ ...prev, [searchKey]: audiusUrl }));
       setSelectedSong({ ...song, audiusUrl });
     } else {
       alert('Audius track not found!');
