@@ -13,7 +13,7 @@ const Albums = () => {
   const [rapperName, setRapperName] = useState('');
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [youtubeUrl, setYoutubeUrl] = useState('');
-  const [youtubeChannelId, setYoutubeChannelId] = useState('');
+  const [channelVideos, setChannelVideos] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,8 +25,7 @@ const Albums = () => {
           `https://api.spotify.com/v1/artists/${rapperId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        const artistName = artistResponse.data.name;
-        setRapperName(artistName);
+        setRapperName(artistResponse.data.name);
 
         const tracksResponse = await axios.get(
           `https://api.spotify.com/v1/artists/${rapperId}/top-tracks?market=IN`,
@@ -40,9 +39,7 @@ const Albums = () => {
         );
         setAlbums(albumResponse.data.items);
 
-        if (artistName.toLowerCase() === 'drake') {
-          setYoutubeChannelId('UCByOQJjav0CUDwxCk-jVNRQ'); // Example channel ID for Drake
-        }
+        fetchArtistChannel(artistResponse.data.name);
 
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -85,6 +82,37 @@ const Albums = () => {
     setYoutubeUrl(ytUrl);
   };
 
+  const fetchArtistChannel = async (artistName) => {
+    try {
+      const searchResponse = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+        params: {
+          key: 'AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg',
+          q: artistName,
+          part: 'snippet',
+          type: 'channel',
+          maxResults: 1,
+        }
+      });
+
+      const channelId = searchResponse.data.items[0]?.id?.channelId;
+
+      if (channelId) {
+        const videoResponse = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+          params: {
+            key: 'AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg',
+            channelId,
+            part: 'snippet',
+            order: 'date',
+            maxResults: 10,
+          }
+        });
+        setChannelVideos(videoResponse.data.items);
+      }
+    } catch (err) {
+      console.error('YouTube channel fetch error:', err);
+    }
+  };
+
   return (
     <div className="albums-page">
       <h1>{rapperName ? `${rapperName}'s Music` : 'Music'}</h1>
@@ -92,20 +120,23 @@ const Albums = () => {
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
 
-      {/* All Songs of Artist from YouTube */}
-      {youtubeChannelId && (
-        <div className="youtube-section">
+      {/* All Songs from YouTube Section */}
+      {channelVideos.length > 0 && (
+        <div className="youtube-songs-section">
           <h2>All Songs of {rapperName}</h2>
-          <div className="youtube-videos">
-            <iframe
-              width="100%"
-              height="400"
-              src={`https://www.youtube.com/embed?listType=user_uploads&list=${youtubeChannelId}`}
-              title="YouTube Songs"
-              frameBorder="0"
-              allow="autoplay; encrypted-media"
-              allowFullScreen
-            />
+          <div className="youtube-video-grid">
+            {channelVideos.map((video) => (
+              <iframe
+                key={video.id.videoId}
+                width="300"
+                height="170"
+                src={`https://www.youtube.com/embed/${video.id.videoId}`}
+                title={video.snippet.title}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ))}
           </div>
         </div>
       )}
@@ -146,7 +177,6 @@ const Albums = () => {
         </div>
       </div>
 
-      {/* Popup Player */}
       {selectedTrack && youtubeUrl && (
         <div className="popup">
           <div className="popup-content dark">
@@ -159,7 +189,6 @@ const Albums = () => {
               <h3>{selectedTrack.name}</h3>
               <p>{selectedTrack.artists.map(artist => artist.name).join(', ')}</p>
             </div>
-
             <div style={{ width: '1px', height: '1px', overflow: 'hidden' }}>
               <iframe
                 width="1"
@@ -171,7 +200,6 @@ const Albums = () => {
                 allowFullScreen
               />
             </div>
-
             <button onClick={() => setSelectedTrack(null)} className="close-button">
               Close
             </button>
