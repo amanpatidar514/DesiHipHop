@@ -46,23 +46,38 @@
 
 .rappers-loading,
 .rappers-error {
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     background: #121212;
     color: white;
+    text-align: center;
+    padding: 2rem;
 }
 
 .rappers-error button {
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
+    margin: 1rem;
+    padding: 0.8rem 1.5rem;
     background: #1db954;
     border: none;
-    border-radius: 20px;
+    border-radius: 25px;
     color: white;
     cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.rappers-error button:hover {
+    background: #1ed760;
+}
+
+.no-rappers {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.2rem;
+    color: #b3b3b3;
 }
 
 h1 {
