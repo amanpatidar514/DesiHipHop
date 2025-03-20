@@ -5,7 +5,7 @@ import './Songs.css';
 
 const SPOTIFY_CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';
 const SPOTIFY_CLIENT_SECRET = 'b66594a7b0b74f2d8ebce2e715418bbc';
-const YOUTUBE_API_KEY = 'AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg'; // 🔁 Replace this with your real YouTube API key
+const YOUTUBE_API_KEY = 'AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg';
 
 const Songs = () => {
   const { albumId } = useParams();
@@ -39,13 +39,13 @@ const Songs = () => {
   const getYouTubeVideoId = async (songName, artistName) => {
     const searchKey = `${songName}-${artistName}`;
     if (youtubeUrlCache[searchKey]) return youtubeUrlCache[searchKey];
-  
+
     try {
       const query = `${songName} by ${artistName} official audio`
-        .replace(/[^a-zA-Z0-9 ]/g, '') // remove symbols like commas, dashes, etc.
+        .replace(/[^a-zA-Z0-9 ]/g, '')
         .trim();
-  
-      const response = await axios.get(`https://www.googleapis.com/youtube/v3/search`, {
+
+      const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
         params: {
           key: YOUTUBE_API_KEY,
           part: 'snippet',
@@ -54,7 +54,7 @@ const Songs = () => {
           maxResults: 1,
         },
       });
-  
+
       const video = response.data.items[0];
       if (video) {
         const videoId = video.id.videoId;
@@ -65,10 +65,9 @@ const Songs = () => {
     } catch (err) {
       console.error(`YouTube search error for ${songName} - ${artistName}:`, err);
     }
-  
+
     return null;
   };
-  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -144,13 +143,20 @@ const Songs = () => {
       {selectedSong && selectedSong.youtubeUrl && (
         <div className="popup">
           <div className="popup-content dark">
-            <h2>{selectedSong.name}</h2>
-            <p className="artist-name">{selectedSong.artists}</p>
+            <div className="song-info">
+              <img
+                src={selectedSong.albumImage}
+                alt={selectedSong.name}
+                className="track-image"
+              />
+              <h3>{selectedSong.name}</h3>
+              <p>{selectedSong.artists}</p>
+            </div>
 
-            <div style={{ display: 'none' }}>
+            <div style={{ width: '1px', height: '1px', overflow: 'hidden' }}>
               <iframe
-                width="0"
-                height="0"
+                width="1"
+                height="1"
                 src={selectedSong.youtubeUrl}
                 allow="autoplay"
                 frameBorder="0"
