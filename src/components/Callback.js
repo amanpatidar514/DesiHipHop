@@ -4,29 +4,25 @@ const Callback = () => {
   useEffect(() => {
     const handleCallback = () => {
       try {
-        // Get token from URL
-        const hash = window.location.hash;
-        console.log("Hash received:", hash); // Debug log
-
-        const accessTokenMatch = hash.match(/access_token=([^&]*)/);
-        const accessToken = accessTokenMatch ? accessTokenMatch[1] : null;
-        console.log("Token extracted:", accessToken ? "Token found" : "No token"); // Debug log
+        // Get token from URL without using regex
+        const params = new URLSearchParams(
+          window.location.hash.substring(1) // Remove the # character
+        );
+        const accessToken = params.get('access_token');
+        console.log("Token found:", accessToken ? 'Yes' : 'No');
 
         if (accessToken) {
           // Store token
           localStorage.setItem('spotify_access_token', accessToken);
           
-          // Remove hash from URL
-          window.history.pushState("", document.title, window.location.pathname);
+          // Clear the URL hash
+          window.history.pushState({}, document.title, '/');
           
-          // Force a hard redirect to rappers page
-          const baseUrl = 'https://amanpatidar514.github.io/DesiHipHop';
-          const rappersUrl = `${baseUrl}/#/rappers`;
-          
-          console.log("Redirecting to:", rappersUrl); // Debug log
-          window.location.href = rappersUrl;
+          // Redirect to rappers page
+          setTimeout(() => {
+            window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/rappers';
+          }, 1000);
         } else {
-          // If no token, redirect to home
           window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/';
         }
       } catch (error) {
@@ -35,7 +31,6 @@ const Callback = () => {
       }
     };
 
-    // Execute callback handling
     handleCallback();
   }, []);
 

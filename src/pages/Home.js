@@ -25,15 +25,18 @@ const Home = () => {
       'user-modify-playback-state'
     ].join(' ');
 
-    const authUrl = 
-      'https://accounts.spotify.com/authorize' +
-      '?response_type=token' +
-      '&client_id=' + encodeURIComponent(CLIENT_ID) +
-      '&scope=' + encodeURIComponent(SCOPES) +
-      '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
-      '&show_dialog=true';
+    // Use URLSearchParams for better parameter handling
+    const params = new URLSearchParams({
+      client_id: CLIENT_ID,
+      response_type: 'token',
+      redirect_uri: REDIRECT_URI,
+      scope: SCOPES,
+      show_dialog: true
+    });
 
-    console.log("Auth URL:", authUrl); // Debug log
+    const authUrl = 'https://accounts.spotify.com/authorize?' + params.toString();
+    
+    // Use a simple redirect
     window.location.href = authUrl;
   };
 
