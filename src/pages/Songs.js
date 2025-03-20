@@ -36,59 +36,47 @@ const Songs = () => {
     }
   };
 
+  const clean = (str) => str.toLowerCase().replace(/[^a-z0-9 ]/g, '');
+
   const fetchAudiusTrackUrl = async (trackName, artistName) => {
-    const clean = (str) =>
-      str
-        .toLowerCase()
-        .replace(/ *\([^)]*\) */g, '')
-        .replace(/[^\w\s]/gi, '')
-        .trim();
-
-    const cleanedTrack = clean(trackName);
-    const cleanedArtist = clean(artistName);
-    const searchQuery = `${cleanedTrack} ${cleanedArtist}`;
-
     try {
+      const searchQuery = `${trackName} ${artistName}`;
       const response = await axios.get(`https://discoveryprovider.audius.co/v1/tracks/search`, {
         params: {
           query: searchQuery,
           limit: 5,
-          app_name: 'DesiHipHop',
         },
       });
 
       const results = response.data.data;
-
       console.log(`Audius search results for "${searchQuery}":`, results);
 
       if (results && results.length > 0) {
-        const bestMatch = results.find(
-          (track) =>
-            clean(track.title).includes(cleanedTrack) &&
-            clean(track.user.name).includes(cleanedArtist)
-        ) || results[0];
+        const cleanedTrack = clean(trackName);
+        const cleanedArtist = clean(artistName);
 
+        const titleWords = cleanedTrack.split(' ');
+        const artistWords = cleanedArtist.split(' ');
+
+        const bestMatch = results.find((track) => {
+          const tTitle = clean(track.title);
+          const tArtist = clean(track.user.name);
+
+          const titleMatch = titleWords.some(word => tTitle.includes(word));
+          const artistMatch = artistWords.some(word => tArtist.includes(word));
+
+          return titleMatch && artistMatch;
+        }) || results[0];
+
+        console.log('Selected Audius bestMatch:', bestMatch);
         return bestMatch.stream_url || '';
       }
 
       return '';
     } catch (error) {
-      console.error(`Error fetching Audius track for "${searchQuery}":`, error);
+      console.error(`Error fetching Audius track for "${trackName} - ${artistName}":`, error);
       return '';
     }
-  };
-
-  const getAudiusStreamUrl = async (song) => {
-    const searchKey = `${song.name}-${song.artists}`;
-    if (audiusStreamUrlCache[searchKey]) return audiusStreamUrlCache[searchKey];
-
-    const audiusUrl = await fetchAudiusTrackUrl(song.name, song.artists);
-
-    if (audiusUrl) {
-      setAudiusStreamUrlCache((prev) => ({ ...prev, [searchKey]: audiusUrl }));
-    }
-
-    return audiusUrl;
   };
 
   useEffect(() => {
@@ -106,14 +94,12 @@ const Songs = () => {
 
           const track = trackRes.data;
           setAlbumName(track.album.name);
-          setSongs([
-            {
-              name: track.name,
-              id: track.id,
-              artists: track.artists.map((a) => a.name).join(', '),
-              albumImage: track.album.images[0]?.url,
-            },
-          ]);
+          setSongs([{
+            name: track.name,
+            id: track.id,
+            artists: track.artists.map((a) => a.name).join(', '),
+            albumImage: track.album.images[0]?.url,
+          }]);
           return;
         } catch (err) {
           if (err.response?.status !== 404) throw err;
@@ -148,8 +134,15 @@ const Songs = () => {
   }, [albumId]);
 
   const handleSongClick = async (song) => {
-    const audiusUrl = await getAudiusStreamUrl(song);
+    const cacheKey = `${song.name}-${song.artists}`;
+    if (audiusStreamUrlCache[cacheKey]) {
+      setSelectedSong({ ...song, audiusUrl: audiusStreamUrlCache[cacheKey] });
+      return;
+    }
+
+    const audiusUrl = await fetchAudiusTrackUrl(song.name, song.artists);
     if (audiusUrl) {
+      setAudiusStreamUrlCache(prev => ({ ...prev, [cacheKey]: audiusUrl }));
       setSelectedSong({ ...song, audiusUrl });
     } else {
       alert('Audius track not found!');
