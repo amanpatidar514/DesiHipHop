@@ -18,19 +18,14 @@ const Callback = () => {
           // Store the token
           localStorage.setItem('spotify_access_token', accessToken);
           
-          // Clear the hash from URL
-          window.location.hash = '';
-          
-          // Force navigation to rappers page
-          setTimeout(() => {
-            navigate('/rappers', { replace: true });
-          }, 1000);
+          // Use window.location.href instead of navigate
+          window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/rappers';
         } else {
-          navigate('/', { replace: true });
+          window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/';
         }
       } catch (error) {
         console.error('Error in callback:', error);
-        navigate('/', { replace: true });
+        window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/';
       }
     };
 
@@ -44,7 +39,7 @@ const Callback = () => {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      background: '#000',
+      background: '#121212',
       color: '#fff',
       flexDirection: 'column',
       gap: '20px'

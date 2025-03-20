@@ -10,19 +10,20 @@ const Rappers = () => {
 
   useEffect(() => {
     const fetchRappers = async () => {
-      const token = localStorage.getItem('spotify_access_token');
-      console.log('Token:', token); // Debug log
-      
-      if (!token) {
-        console.log('No token found, redirecting to home'); // Debug log
-        navigate('/');
-        return;
-      }
-
       try {
-        console.log('Fetching rappers...'); // Debug log
+        const token = localStorage.getItem('spotify_access_token');
+        console.log('Token:', token);
+
+        if (!token) {
+          console.log('No token found, redirecting to home');
+          navigate('/');
+          return;
+        }
+
+        console.log('Fetching rappers...');
+        // Update the search query to get more relevant results
         const response = await fetch(
-          'https://api.spotify.com/v1/search?q=genre:hip-hop%20indian&type=artist&limit=20',
+          'https://api.spotify.com/v1/search?q=genre:"hip-hop"+indian+rapper&type=artist&market=IN&limit=50',
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -31,28 +32,38 @@ const Rappers = () => {
           }
         );
 
-        console.log('Response status:', response.status); // Debug log
+        console.log('Response status:', response.status);
 
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error('API Error:', errorData); // Debug log
+          if (response.status === 401) {
+            // Token expired, clear and redirect to home
+            localStorage.removeItem('spotify_access_token');
+            navigate('/');
+            return;
+          }
           throw new Error(`Failed to fetch rappers: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('Fetched data:', data); // Debug log
+        console.log('Fetched data:', data);
 
         if (data.artists && data.artists.items) {
-          const filteredRappers = data.artists.items.filter(artist => 
-            artist.popularity > 20 && artist.images.length > 0
-          );
-          console.log('Filtered rappers:', filteredRappers); // Debug log
+          // Improve filtering criteria
+          const filteredRappers = data.artists.items
+            .filter(artist => 
+              artist.images.length > 0 && 
+              artist.followers.total > 1000
+            )
+            .sort((a, b) => b.popularity - a.popularity)
+            .slice(0, 20);
+
+          console.log('Filtered rappers:', filteredRappers);
           setRappers(filteredRappers);
         } else {
           throw new Error('Invalid data structure received');
         }
       } catch (err) {
-        console.error('Error details:', err); // Debug log
+        console.error('Error details:', err);
         setError(err.message || 'Failed to load rappers');
       } finally {
         setLoading(false);
@@ -62,12 +73,15 @@ const Rappers = () => {
     fetchRappers();
   }, [navigate]);
 
-  // Add visible loading and error states
+  const handleRapperClick = (rapperId) => {
+    navigate(`/albums/${rapperId}`);
+  };
+
   if (loading) {
     return (
       <div className="rappers-loading">
-        <h2>Loading Rappers...</h2>
-        <p>Please wait while we fetch the artists</p>
+        <h2>Loading Artists...</h2>
+        <p>Please wait while we fetch the best hip-hop artists</p>
       </div>
     );
   }
@@ -75,7 +89,7 @@ const Rappers = () => {
   if (error) {
     return (
       <div className="rappers-error">
-        <h2>Error Loading Rappers</h2>
+        <h2>Error Loading Artists</h2>
         <p>{error}</p>
         <button onClick={() => window.location.reload()}>Try Again</button>
         <button onClick={() => navigate('/')}>Go Back Home</button>
@@ -88,12 +102,16 @@ const Rappers = () => {
       <h1>Popular Hip-Hop Artists</h1>
       {rappers.length === 0 ? (
         <div className="no-rappers">
-          <p>No artists found</p>
+          <p>No artists found. Please try again.</p>
         </div>
       ) : (
         <div className="rappers-grid">
           {rappers.map(rapper => (
-            <div key={rapper.id} className="rapper-card">
+            <div 
+              key={rapper.id} 
+              className="rapper-card"
+              onClick={() => handleRapperClick(rapper.id)}
+            >
               <img 
                 src={rapper.images[0]?.url} 
                 alt={rapper.name}
@@ -101,6 +119,7 @@ const Rappers = () => {
               />
               <h3>{rapper.name}</h3>
               <p>Followers: {rapper.followers.total.toLocaleString()}</p>
+              <p className="popularity">Popularity: {rapper.popularity}%</p>
             </div>
           ))}
         </div>
