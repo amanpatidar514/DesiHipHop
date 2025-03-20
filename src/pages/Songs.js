@@ -13,7 +13,7 @@ const Songs = () => {
   const [error, setError] = useState('');
   const [albumName, setAlbumName] = useState('');
   const [selectedSong, setSelectedSong] = useState(null);
-  const [audiusStreamUrlCache, setAudiusStreamUrlCache] = useState({});
+  const [youtubeVideoId, setYoutubeVideoId] = useState('');
 
   const refreshSpotifyToken = async () => {
     try {
@@ -36,45 +36,25 @@ const Songs = () => {
     }
   };
 
-  const clean = (str) => str.toLowerCase().replace(/[^a-z0-9 ]/g, '');
-
-  const fetchAudiusTrackUrl = async (trackName, artistName) => {
+  const fetchYouTubeVideoId = async (trackName, artistName) => {
+    const query = encodeURIComponent(`${trackName} ${artistName}`);
     try {
-      const searchQuery = `${trackName} ${artistName}`;
-      const response = await axios.get(`https://discoveryprovider.audius.co/v1/tracks/search`, {
-        params: {
-          query: searchQuery,
-          limit: 5,
-        },
-      });
+      const response = await axios.get(
+        `https://www.googleapis.com/youtube/v3/search`,
+        {
+          params: {
+            part: 'snippet',
+            q: query,
+            maxResults: 1,
+            key: 'AIzaSyBJuSBqKk36m9bgt7-OB3uNmhOmLaPOGSU',
+          },
+        }
+      );
 
-      const results = response.data.data;
-      console.log(`Audius search results for "${searchQuery}":`, results);
-
-      if (results && results.length > 0) {
-        const cleanedTrack = clean(trackName);
-        const cleanedArtist = clean(artistName);
-
-        const titleWords = cleanedTrack.split(' ');
-        const artistWords = cleanedArtist.split(' ');
-
-        const bestMatch = results.find((track) => {
-          const tTitle = clean(track.title);
-          const tArtist = clean(track.user.name);
-
-          const titleMatch = titleWords.some(word => tTitle.includes(word));
-          const artistMatch = artistWords.some(word => tArtist.includes(word));
-
-          return titleMatch && artistMatch;
-        }) || results[0];
-
-        console.log('Selected Audius bestMatch:', bestMatch);
-        return bestMatch.stream_url || '';
-      }
-
-      return '';
-    } catch (error) {
-      console.error(`Error fetching Audius track for "${trackName} - ${artistName}":`, error);
+      const videoId = response.data.items[0]?.id?.videoId;
+      return videoId || '';
+    } catch (err) {
+      console.error('Error fetching YouTube video ID:', err);
       return '';
     }
   };
@@ -94,12 +74,14 @@ const Songs = () => {
 
           const track = trackRes.data;
           setAlbumName(track.album.name);
-          setSongs([{
-            name: track.name,
-            id: track.id,
-            artists: track.artists.map((a) => a.name).join(', '),
-            albumImage: track.album.images[0]?.url,
-          }]);
+          setSongs([
+            {
+              name: track.name,
+              id: track.id,
+              artists: track.artists.map((a) => a.name).join(', '),
+              albumImage: track.album.images[0]?.url,
+            },
+          ]);
           return;
         } catch (err) {
           if (err.response?.status !== 404) throw err;
@@ -134,18 +116,12 @@ const Songs = () => {
   }, [albumId]);
 
   const handleSongClick = async (song) => {
-    const cacheKey = `${song.name}-${song.artists}`;
-    if (audiusStreamUrlCache[cacheKey]) {
-      setSelectedSong({ ...song, audiusUrl: audiusStreamUrlCache[cacheKey] });
-      return;
-    }
-
-    const audiusUrl = await fetchAudiusTrackUrl(song.name, song.artists);
-    if (audiusUrl) {
-      setAudiusStreamUrlCache(prev => ({ ...prev, [cacheKey]: audiusUrl }));
-      setSelectedSong({ ...song, audiusUrl });
+    const videoId = await fetchYouTubeVideoId(song.name, song.artists);
+    if (videoId) {
+      setYoutubeVideoId(videoId);
+      setSelectedSong(song);
     } else {
-      alert('Audius track not found!');
+      alert('YouTube video not found!');
     }
   };
 
@@ -173,7 +149,7 @@ const Songs = () => {
         )}
       </div>
 
-      {selectedSong && (
+      {selectedSong && youtubeVideoId && (
         <div className="popup">
           <div className="popup-content dark">
             <div className="song-info">
@@ -181,14 +157,17 @@ const Songs = () => {
               <p className="artist-name">{selectedSong.artists}</p>
             </div>
 
-            {selectedSong.audiusUrl ? (
-              <audio controls autoPlay>
-                <source src={selectedSong.audiusUrl} type="audio/mpeg" />
-                Your browser does not support the audio element.
-              </audio>
-            ) : (
-              <p>Loading Audius track...</p>
-            )}
+            <div className="youtube-audio-wrapper">
+              <iframe
+                title="YouTube Music"
+                width="0"
+                height="0"
+                src={`https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1`}
+                frameBorder="0"
+                allow="autoplay"
+                allowFullScreen
+              ></iframe>
+            </div>
 
             <button onClick={() => setSelectedSong(null)} className="close-button">
               Close
