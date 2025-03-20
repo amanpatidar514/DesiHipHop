@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 import getSpotifyToken from './getSpotifyToken';
+import YouTube from 'react-youtube';
 import './Albums.css';
 
 const Albums = () => {
@@ -12,9 +13,12 @@ const Albums = () => {
   const [error, setError] = useState('');
   const [rapperName, setRapperName] = useState('');
   const [selectedTrack, setSelectedTrack] = useState(null);
-  const [youtubeAudioUrl, setYoutubeAudioUrl] = useState('');
-  const playerRef = useRef(null);
+  const [videoId, setVideoId] = useState('');
+  const [player, setPlayer] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(50);
+
+  const playerRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,45 +68,40 @@ const Albums = () => {
         }
       });
 
-      const videoId = response.data.items[0]?.id?.videoId;
-      if (videoId) {
-        return `https://www.youtube.com/watch?v=${videoId}`;
-      }
+      return response.data.items[0]?.id?.videoId || '';
     } catch (err) {
       console.error(`YouTube search error for ${trackName} - ${artistName}:`, err);
+      return '';
     }
-
-    return '';
   };
 
   const handleTrackClick = async (track) => {
     setSelectedTrack(track);
-    const ytUrl = await fetchYouTubeAudio(track.name, track.artists[0].name);
-    const videoId = ytUrl.split("v=")[1];
-    setYoutubeAudioUrl(ytUrl);
+    const id = await fetchYouTubeAudio(track.name, track.artists[0].name);
+    setVideoId(id);
+    setIsPlaying(true);
+  };
 
-    if (!window.YT) {
-      const tag = document.createElement('script');
-      tag.src = "https://www.youtube.com/iframe_api";
-      document.body.appendChild(tag);
+  const onPlayerReady = (event) => {
+    setPlayer(event.target);
+    event.target.setVolume(volume);
+    playerRef.current = event.target;
+  };
+
+  const handlePlayPause = () => {
+    if (!player) return;
+    if (isPlaying) {
+      player.pauseVideo();
+    } else {
+      player.playVideo();
     }
+    setIsPlaying(!isPlaying);
+  };
 
-    window.onYouTubeIframeAPIReady = () => {
-      playerRef.current = new window.YT.Player('youtube-player', {
-        height: '1',
-        width: '1',
-        videoId,
-        playerVars: {
-          autoplay: 1,
-        },
-        events: {
-          onReady: (event) => {
-            event.target.setVolume(volume);
-            event.target.playVideo();
-          }
-        }
-      });
-    };
+  const handleVolumeChange = (e) => {
+    const newVolume = parseInt(e.target.value);
+    setVolume(newVolume);
+    if (player) player.setVolume(newVolume);
   };
 
   return (
@@ -146,34 +145,33 @@ const Albums = () => {
         </div>
       </div>
 
-      {selectedTrack && youtubeAudioUrl && (
+      {selectedTrack && videoId && (
         <div className="popup">
           <div className="popup-content dark">
             <div className="song-info">
-              <img
-                src={selectedTrack.album.images[0]?.url}
-                alt={selectedTrack.name}
-                className="track-image"
-              />
+              <img src={selectedTrack.album.images[0]?.url} alt={selectedTrack.name} className="track-image" />
               <h3>{selectedTrack.name}</h3>
               <p>{selectedTrack.artists.map(artist => artist.name).join(', ')}</p>
             </div>
 
-            <div id="youtube-player" style={{ display: 'none' }}></div>
+            <YouTube
+              videoId={videoId}
+              opts={{ height: '1', width: '1', playerVars: { autoplay: 1 } }}
+              onReady={onPlayerReady}
+              style={{ display: 'none' }}
+            />
 
             <div className="custom-controls">
-              <button onClick={() => playerRef.current?.playVideo()}>▶️ Play</button>
-              <button onClick={() => playerRef.current?.pauseVideo()}>⏸ Pause</button>
+              <button onClick={handlePlayPause} className="control-button">
+                {isPlaying ? '⏸ Pause' : '▶ Play'}
+              </button>
               <input
                 type="range"
                 min="0"
                 max="100"
                 value={volume}
-                onChange={(e) => {
-                  const newVolume = parseInt(e.target.value);
-                  setVolume(newVolume);
-                  playerRef.current?.setVolume(newVolume);
-                }}
+                onChange={handleVolumeChange}
+                className="volume-slider"
               />
             </div>
 
