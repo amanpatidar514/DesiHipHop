@@ -12,7 +12,7 @@ const Albums = () => {
   const [error, setError] = useState('');
   const [rapperName, setRapperName] = useState('');
   const [selectedTrack, setSelectedTrack] = useState(null);
-  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [youtubeAudioUrl, setYoutubeAudioUrl] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,7 +49,7 @@ const Albums = () => {
     if (rapperId) fetchData();
   }, [rapperId]);
 
-  const fetchYouTubeUrl = async (trackName, artistName) => {
+  const fetchYouTubeAudio = async (trackName, artistName) => {
     try {
       const query = `${trackName} ${artistName}`;
       const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
@@ -64,7 +64,7 @@ const Albums = () => {
 
       const videoId = response.data.items[0]?.id?.videoId;
       if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        return `https://www.youtube.com/watch?v=${videoId}`;
       }
     } catch (err) {
       console.error(`YouTube search error for ${trackName} - ${artistName}:`, err);
@@ -75,14 +75,14 @@ const Albums = () => {
 
   const handleTrackClick = async (track) => {
     setSelectedTrack(track);
-    const ytUrl = await fetchYouTubeUrl(track.name, track.artists[0].name);
-    setYoutubeUrl(ytUrl);
+    const ytUrl = await fetchYouTubeAudio(track.name, track.artists[0].name);
+    setYoutubeAudioUrl(ytUrl);
   };
 
   return (
     <div className="albums-page">
       <h1>{rapperName ? `${rapperName}'s Music` : 'Music'}</h1>
-      
+
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
 
@@ -91,9 +91,9 @@ const Albums = () => {
         <h2>Popular Tracks</h2>
         <div className="albums-grid">
           {tracks.map((track) => (
-            <div 
-              key={track.id} 
-              className="album-card" 
+            <div
+              key={track.id}
+              className="album-card"
               onClick={() => handleTrackClick(track)}
             >
               <img src={track.album.images[0]?.url} alt={track.name} />
@@ -123,34 +123,23 @@ const Albums = () => {
       </div>
 
       {/* Popup Player for Tracks */}
-      {selectedTrack && youtubeUrl && (
+      {selectedTrack && youtubeAudioUrl && (
         <div className="popup">
           <div className="popup-content dark">
             <div className="song-info">
-              <img 
-                src={selectedTrack.album.images[0]?.url} 
-                alt={selectedTrack.name} 
+              <img
+                src={selectedTrack.album.images[0]?.url}
+                alt={selectedTrack.name}
                 className="track-image"
               />
               <h3>{selectedTrack.name}</h3>
               <p>{selectedTrack.artists.map(artist => artist.name).join(', ')}</p>
             </div>
-            <div className="audio-player" style={{
-              background: 'linear-gradient(135deg, #1db954, #191414)',
-              padding: '1rem',
-              borderRadius: '1rem',
-              display: 'flex',
-              justifyContent: 'center'
-            }}>
-              <iframe
-                width="100%"
-                height="80"
-                src={youtubeUrl}
-                title="YouTube Audio"
-                allow="autoplay"
-                frameBorder="0"
-                style={{ borderRadius: '1rem' }}
-              />
+            <div className="audio-controls gradient-bg">
+              <audio controls autoPlay>
+                <source src={`https://yt-mp3-audio.vercel.app/api/stream?url=${youtubeAudioUrl}`} type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
             </div>
             <button onClick={() => setSelectedTrack(null)} className="close-button">
               Close
