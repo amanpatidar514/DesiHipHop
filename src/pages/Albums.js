@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 import getSpotifyToken from './getSpotifyToken';
-import YouTube from 'react-youtube';
 import './Albums.css';
 
 const Albums = () => {
@@ -13,12 +12,7 @@ const Albums = () => {
   const [error, setError] = useState('');
   const [rapperName, setRapperName] = useState('');
   const [selectedTrack, setSelectedTrack] = useState(null);
-  const [videoId, setVideoId] = useState('');
-  const [player, setPlayer] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(50);
-
-  const playerRef = useRef(null);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,40 +62,21 @@ const Albums = () => {
         }
       });
 
-      return response.data.items[0]?.id?.videoId || '';
+      const videoId = response.data.items[0]?.id?.videoId;
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+      }
     } catch (err) {
       console.error(`YouTube search error for ${trackName} - ${artistName}:`, err);
-      return '';
     }
+
+    return '';
   };
 
   const handleTrackClick = async (track) => {
     setSelectedTrack(track);
-    const id = await fetchYouTubeAudio(track.name, track.artists[0].name);
-    setVideoId(id);
-    setIsPlaying(true);
-  };
-
-  const onPlayerReady = (event) => {
-    setPlayer(event.target);
-    event.target.setVolume(volume);
-    playerRef.current = event.target;
-  };
-
-  const handlePlayPause = () => {
-    if (!player) return;
-    if (isPlaying) {
-      player.pauseVideo();
-    } else {
-      player.playVideo();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleVolumeChange = (e) => {
-    const newVolume = parseInt(e.target.value);
-    setVolume(newVolume);
-    if (player) player.setVolume(newVolume);
+    const ytUrl = await fetchYouTubeAudio(track.name, track.artists[0].name);
+    setYoutubeUrl(ytUrl);
   };
 
   return (
@@ -111,6 +86,7 @@ const Albums = () => {
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
 
+      {/* Top Tracks Section */}
       <div className="tracks-section">
         <h2>Popular Tracks</h2>
         <div className="albums-grid">
@@ -128,6 +104,7 @@ const Albums = () => {
         </div>
       </div>
 
+      {/* Albums Section */}
       <div className="albums-section">
         <h2>Albums</h2>
         <div className="albums-grid">
@@ -145,33 +122,29 @@ const Albums = () => {
         </div>
       </div>
 
-      {selectedTrack && videoId && (
+      {/* Audio Playback Popup */}
+      {selectedTrack && youtubeUrl && (
         <div className="popup">
           <div className="popup-content dark">
             <div className="song-info">
-              <img src={selectedTrack.album.images[0]?.url} alt={selectedTrack.name} className="track-image" />
+              <img
+                src={selectedTrack.album.images[0]?.url}
+                alt={selectedTrack.name}
+                className="track-image"
+              />
               <h3>{selectedTrack.name}</h3>
               <p>{selectedTrack.artists.map(artist => artist.name).join(', ')}</p>
             </div>
 
-            <YouTube
-              videoId={videoId}
-              opts={{ height: '1', width: '1', playerVars: { autoplay: 1 } }}
-              onReady={onPlayerReady}
-              style={{ display: 'none' }}
-            />
-
-            <div className="custom-controls">
-              <button onClick={handlePlayPause} className="control-button">
-                {isPlaying ? '⏸ Pause' : '▶ Play'}
-              </button>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={volume}
-                onChange={handleVolumeChange}
-                className="volume-slider"
+            {/* Hidden YouTube iframe for audio playback */}
+            <div style={{ width: '1px', height: '1px', overflow: 'hidden' }}>
+              <iframe
+                width="1"
+                height="1"
+                src={youtubeUrl}
+                title="YouTube Audio"
+                allow="autoplay"
+                frameBorder="0"
               />
             </div>
 
@@ -181,6 +154,7 @@ const Albums = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };
