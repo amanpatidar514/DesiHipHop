@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import getSpotifyToken from './getSpotifyToken';
 import './Albums.css';
 
@@ -14,6 +14,9 @@ const Albums = () => {
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [channelVideos, setChannelVideos] = useState([]);
+  const [rapperImage, setRapperImage] = useState('');
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,6 +29,7 @@ const Albums = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setRapperName(artistResponse.data.name);
+        setRapperImage(artistResponse.data.images[0]?.url || '');
 
         const tracksResponse = await axios.get(
           `https://api.spotify.com/v1/artists/${rapperId}/top-tracks?market=IN`,
@@ -40,7 +44,6 @@ const Albums = () => {
         setAlbums(albumResponse.data.items);
 
         fetchArtistChannel(artistResponse.data.name);
-
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load content. Please try again.');
@@ -120,10 +123,21 @@ const Albums = () => {
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
 
+      {/* 🆕 All Songs Card Section (Spotify Songs) */}
+      {rapperImage && (
+        <div className="all-songs-section">
+          <h2>All Songs of {rapperName}</h2>
+          <div className="all-songs-box" onClick={() => navigate(`/songs/${rapperId}`)}>
+            <img src={rapperImage} alt={rapperName} />
+            <p>{rapperName}</p>
+          </div>
+        </div>
+      )}
+
       {/* All Songs from YouTube Section */}
       {channelVideos.length > 0 && (
         <div className="youtube-songs-section">
-          <h2>All Songs of {rapperName}</h2>
+          <h2>YouTube Videos</h2>
           <div className="youtube-video-grid">
             {channelVideos.map((video) => (
               <iframe
