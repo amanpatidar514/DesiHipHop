@@ -10,18 +10,16 @@ const Rappers = () => {
 
   useEffect(() => {
     const fetchRappers = async () => {
+      const token = localStorage.getItem('spotify_access_token');
+      console.log('Attempting to fetch with token:', token); // Debug log
+
+      if (!token) {
+        console.log('No token found, redirecting to home');
+        navigate('/');
+        return;
+      }
+
       try {
-        const token = localStorage.getItem('spotify_access_token');
-        console.log('Token:', token);
-
-        if (!token) {
-          console.log('No token found, redirecting to home');
-          navigate('/');
-          return;
-        }
-
-        console.log('Fetching rappers...');
-        // Update the search query to get more relevant results
         const response = await fetch(
           'https://api.spotify.com/v1/search?q=genre:"hip-hop"+indian+rapper&type=artist&market=IN&limit=50',
           {
@@ -32,39 +30,34 @@ const Rappers = () => {
           }
         );
 
-        console.log('Response status:', response.status);
+        console.log('API Response status:', response.status); // Debug log
 
         if (!response.ok) {
           if (response.status === 401) {
-            // Token expired, clear and redirect to home
+            // Token expired
             localStorage.removeItem('spotify_access_token');
             navigate('/');
             return;
           }
-          throw new Error(`Failed to fetch rappers: ${response.status}`);
+          throw new Error(`API Error: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('Fetched data:', data);
+        console.log('API Response data:', data); // Debug log
 
         if (data.artists && data.artists.items) {
-          // Improve filtering criteria
           const filteredRappers = data.artists.items
-            .filter(artist => 
-              artist.images.length > 0 && 
-              artist.followers.total > 1000
-            )
+            .filter(artist => artist.images.length > 0)
             .sort((a, b) => b.popularity - a.popularity)
             .slice(0, 20);
 
-          console.log('Filtered rappers:', filteredRappers);
           setRappers(filteredRappers);
         } else {
           throw new Error('Invalid data structure received');
         }
       } catch (err) {
-        console.error('Error details:', err);
-        setError(err.message || 'Failed to load rappers');
+        console.error('Error fetching rappers:', err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }

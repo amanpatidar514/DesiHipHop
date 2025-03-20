@@ -7,25 +7,27 @@ const Callback = () => {
   useEffect(() => {
     const handleCallback = () => {
       try {
-        // Get the full hash including the #
         const hash = window.location.hash;
-        
-        // Extract access token using regex
         const accessTokenMatch = hash.match(/access_token=([^&]*)/);
         const accessToken = accessTokenMatch ? accessTokenMatch[1] : null;
 
         if (accessToken) {
           // Store the token
           localStorage.setItem('spotify_access_token', accessToken);
+          console.log('Token stored:', accessToken); // Debug log
           
-          // Use window.location.href instead of navigate
-          window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/rappers';
+          // Clear the hash
+          window.location.hash = '';
+          
+          // Navigate to rappers page using full URL
+          window.location.replace('https://amanpatidar514.github.io/DesiHipHop/#/rappers');
         } else {
-          window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/';
+          console.log('No token found'); // Debug log
+          window.location.replace('https://amanpatidar514.github.io/DesiHipHop/#/');
         }
       } catch (error) {
         console.error('Error in callback:', error);
-        window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/';
+        window.location.replace('https://amanpatidar514.github.io/DesiHipHop/#/');
       }
     };
 
