@@ -12,6 +12,7 @@ const Albums = () => {
   const [error, setError] = useState('');
   const [rapperName, setRapperName] = useState('');
   const [selectedTrack, setSelectedTrack] = useState(null);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -19,30 +20,21 @@ const Albums = () => {
         setLoading(true);
         const token = await getSpotifyToken();
 
-        // Fetch rapper details
         const artistResponse = await axios.get(
           `https://api.spotify.com/v1/artists/${rapperId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setRapperName(artistResponse.data.name);
 
-        // Fetch top tracks
         const tracksResponse = await axios.get(
           `https://api.spotify.com/v1/artists/${rapperId}/top-tracks?market=IN`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setTracks(tracksResponse.data.tracks);
 
-        // Fetch albums
         const albumResponse = await axios.get(
           `https://api.spotify.com/v1/artists/${rapperId}/albums?include_groups=album&limit=50`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setAlbums(albumResponse.data.items);
 
@@ -54,13 +46,37 @@ const Albums = () => {
       }
     };
 
-    if (rapperId) {
-      fetchData();
-    }
+    if (rapperId) fetchData();
   }, [rapperId]);
 
-  const handleTrackClick = (track) => {
+  const fetchYouTubeUrl = async (trackName, artistName) => {
+    try {
+      const query = `${trackName} ${artistName}`;
+      const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+        params: {
+          key: 'AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg', // replace with your real YouTube API key
+          part: 'snippet',
+          q: query,
+          type: 'video',
+          maxResults: 1
+        }
+      });
+
+      const videoId = response.data.items[0]?.id?.videoId;
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+      }
+    } catch (err) {
+      console.error(`YouTube search error for ${trackName} - ${artistName}:`, err);
+    }
+
+    return '';
+  };
+
+  const handleTrackClick = async (track) => {
     setSelectedTrack(track);
+    const ytUrl = await fetchYouTubeUrl(track.name, track.artists[0].name);
+    setYoutubeUrl(ytUrl);
   };
 
   return (
@@ -107,7 +123,7 @@ const Albums = () => {
       </div>
 
       {/* Popup Player for Tracks */}
-      {selectedTrack && (
+      {selectedTrack && youtubeUrl && (
         <div className="popup">
           <div className="popup-content dark">
             <div className="song-info">
@@ -119,17 +135,16 @@ const Albums = () => {
               <h3>{selectedTrack.name}</h3>
               <p>{selectedTrack.artists.map(artist => artist.name).join(', ')}</p>
             </div>
-            <iframe
-              id="spotify-player"
-              src={`https://open.spotify.com/embed/track/${selectedTrack.id}?theme=0&autoplay=1&enablejsapi=1`}
-              width="100%"
-              height="152"
-              frameBorder="0"
-              allowtransparency="true"
-              allow="encrypted-media; autoplay; web-share"
-              loading="eager"
-              title="Spotify Player"
-            />
+            <div className="audio-player">
+              <iframe
+                width="0"
+                height="0"
+                src={youtubeUrl}
+                title="YouTube Audio"
+                allow="autoplay"
+                frameBorder="0"
+              />
+            </div>
             <button onClick={() => setSelectedTrack(null)} className="close-button">
               Close
             </button>
