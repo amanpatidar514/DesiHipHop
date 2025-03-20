@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../pages/Home.css';
 
 const Home = () => {
   const navigate = useNavigate();
+
+  // Check if already authenticated
+  useEffect(() => {
+    const token = localStorage.getItem('spotify_access_token');
+    if (token) {
+      navigate('/rappers');
+    }
+  }, [navigate]);
 
   const handleStartListening = () => {
     const CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';

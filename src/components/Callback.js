@@ -18,18 +18,19 @@ const Callback = () => {
           // Store the token
           localStorage.setItem('spotify_access_token', accessToken);
           
-          // Clear the URL
-          window.history.replaceState({}, document.title, window.location.pathname);
+          // Clear the hash from URL
+          window.location.hash = '';
           
-          // Navigate to rappers page using full path
-          window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/rappers';
+          // Force navigation to rappers page
+          setTimeout(() => {
+            navigate('/rappers', { replace: true });
+          }, 1000);
         } else {
-          // If no token, go back to home
-          window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/';
+          navigate('/', { replace: true });
         }
       } catch (error) {
         console.error('Error in callback:', error);
-        window.location.href = 'https://amanpatidar514.github.io/DesiHipHop/#/';
+        navigate('/', { replace: true });
       }
     };
 
