@@ -44,7 +44,7 @@ const Home = () => {
       <div className="content">
         <div className="logo">
           <img 
-            src={require('./logo.jpeg')}
+            src={`${process.env.PUBLIC_URL}/images/logo.jpeg`}
             alt="Desi Hip-Hop Logo" 
             style={{ 
               width: '150px', 
