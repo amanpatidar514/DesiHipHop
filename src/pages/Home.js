@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../pages/Home.css';
+import logo from './logo.jpeg';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ const Home = () => {
       <div className="content">
         <div className="logo">
           <img 
-            src={`${process.env.PUBLIC_URL}/images/logo.jpeg`} 
+            src={logo}
             alt="Desi Hip-Hop Logo" 
           />
         </div>
