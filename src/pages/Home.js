@@ -16,31 +16,29 @@ const Home = () => {
 
   const handleStartListening = () => {
     const CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';
-    // Remove hash routing from callback URL
-    const REDIRECT_URI = 'https://amanpatidar514.github.io/DesiHipHop/callback';
+    // Use hash routing in callback URL
+    const REDIRECT_URI = 'https://amanpatidar514.github.io/DesiHipHop/#/callback';
     
+    // Generate a random state value
+    const state = Math.random().toString(36).substring(7);
+    localStorage.setItem('spotify_auth_state', state);
+
     const SCOPES = [
       'user-read-email',
       'user-read-private',
       'user-read-playback-state',
       'user-modify-playback-state'
-    ].join(' ');
+    ];
 
-    // Build auth URL
-    const params = {
-      client_id: CLIENT_ID,
-      redirect_uri: REDIRECT_URI,
-      scope: SCOPES,
-      response_type: 'token',
-      show_dialog: true
-    };
-
-    const authUrl = 'https://accounts.spotify.com/authorize?' + 
-      Object.keys(params)
-        .map(key => `${key}=${encodeURIComponent(params[key])}`)
-        .join('&');
-
-    window.location.href = authUrl;
+    // Use traditional URL parameters
+    window.location.href = 
+      'https://accounts.spotify.com/authorize' +
+      '?response_type=token' +
+      '&client_id=' + CLIENT_ID +
+      '&scope=' + SCOPES.join('%20') +
+      '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
+      '&state=' + state +
+      '&show_dialog=true';
   };
 
   return (
