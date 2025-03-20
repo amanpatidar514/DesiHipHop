@@ -37,7 +37,6 @@ const Albums = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setAlbums(albumResponse.data.items);
-
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load content. Please try again.');
@@ -122,8 +121,8 @@ const Albums = () => {
         </div>
       </div>
 
-    
-      {selectedTrack && youtubeUrl && (
+      {/* Popup Player */}
+      {selectedTrack && youtubeAudioUrl && (
         <div className="popup">
           <div className="popup-content dark">
             <div className="song-info">
@@ -136,12 +135,12 @@ const Albums = () => {
               <p>{selectedTrack.artists.map(artist => artist.name).join(', ')}</p>
             </div>
 
-            
+            {/* Hidden YouTube iframe for audio-only */}
             <div style={{ width: '1px', height: '1px', overflow: 'hidden' }}>
               <iframe
                 width="1"
                 height="1"
-                src={youtubeUrl}
+                src={youtubeAudioUrl.replace("watch?v=", "embed/") + "?autoplay=1"}
                 title="YouTube Audio"
                 allow="autoplay"
                 frameBorder="0"
@@ -155,7 +154,6 @@ const Albums = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };
