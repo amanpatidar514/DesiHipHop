@@ -10,20 +10,25 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 2rem;
-    padding: 2rem 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
 }
   
 .rapper-card {
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 1rem;
+    border-radius: 12px;
+    padding: 1.5rem;
     text-align: center;
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
 }
   
 .rapper-card:hover {
     transform: translateY(-5px);
     background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
   
 .rapper-image {
@@ -32,21 +37,30 @@
     border-radius: 50%;
     margin-bottom: 1rem;
     object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
   
 .rapper-card h3 {
     margin: 0.5rem 0;
-    font-size: 1.2rem;
+    font-size: 1.4rem;
+    color: #fff;
+    font-weight: 600;
 }
   
 .rapper-card p {
     color: #b3b3b3;
     font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.popularity {
+    color: #1db954 !important;
+    font-weight: 500;
 }
 
 .rappers-loading,
 .rappers-error {
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -54,11 +68,22 @@
     background: #121212;
     color: white;
     text-align: center;
-    padding: 2rem;
+}
+
+.rappers-loading h2,
+.rappers-error h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.rappers-loading p,
+.rappers-error p {
+    color: #b3b3b3;
+    margin-bottom: 2rem;
 }
 
 .rappers-error button {
-    margin: 1rem;
+    margin: 0.5rem;
     padding: 0.8rem 1.5rem;
     background: #1db954;
     border: none;
@@ -66,24 +91,27 @@
     color: white;
     cursor: pointer;
     font-size: 1rem;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
 }
 
 .rappers-error button:hover {
     background: #1ed760;
+    transform: scale(1.05);
 }
 
 .no-rappers {
     text-align: center;
-    padding: 2rem;
-    font-size: 1.2rem;
+    padding: 4rem 2rem;
     color: #b3b3b3;
+    font-size: 1.2rem;
 }
 
 h1 {
     text-align: center;
-    margin-bottom: 2rem;
     font-size: 2.5rem;
+    margin: 2rem 0;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .error {
@@ -94,12 +122,17 @@ h1 {
 
 @media (max-width: 768px) {
     .rappers-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 15px;
-        padding: 15px;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        padding: 1rem;
+        gap: 1rem;
     }
 
-    .rapper-card h2 {
-        font-size: 16px;
+    .rapper-image {
+        width: 150px;
+        height: 150px;
+    }
+
+    h1 {
+        font-size: 2rem;
     }
 }
