@@ -134,7 +134,7 @@ const Songs = () => {
       <div className="songs-grid">
         {songs.map(song => (
           <div key={song.id} className="song-card" onClick={() => handleSongClick(song)}>
-            <h2>{song.name}</h2>
+            <h3 className="song-title">{song.name}</h3>
             <p className="artist-name">{song.artists}</p>
           </div>
         ))}

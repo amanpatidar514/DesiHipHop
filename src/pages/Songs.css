@@ -517,3 +517,85 @@ h2 {
     background: #cc0000;
 }
 
+/* === Grid Layout for Songs Page === */
+.songs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+/* Adjust song card inside the grid */
+.song-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #282828;
+    border-radius: 10px;
+    padding: 15px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+/* Image inside card */
+.song-card img {
+    width: 100%;
+    max-width: 140px;
+    height: 140px;
+    border-radius: 10px;
+    object-fit: cover;
+    margin-bottom: 10px;
+    transition: transform 0.3s ease;
+}
+
+/* Hover effect */
+.song-card:hover {
+    background: #383838;
+    transform: translateY(-5px);
+}
+
+.song-card img:hover {
+    transform: scale(1.05);
+}
+
+/* Song title styling */
+.song-card h2 {
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    margin: 5px 0;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Artist name */
+.song-card .artist-name {
+    color: #b3b3b3;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+/* Responsive adjustment for small screens */
+@media (max-width: 600px) {
+    .songs-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        padding: 10px;
+        gap: 15px;
+    }
+
+    .song-card {
+        padding: 10px;
+    }
+
+    .song-card img {
+        max-width: 120px;
+        height: 120px;
+    }
+}
