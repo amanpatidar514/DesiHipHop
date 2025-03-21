@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 import getSpotifyToken from './getSpotifyToken';
 import './Albums.css';
+
+const YOUTUBE_API_KEY = 'AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg';
 
 const Albums = () => {
   const { rapperId } = useParams();
@@ -13,6 +15,7 @@ const Albums = () => {
   const [rapperName, setRapperName] = useState('');
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [youtubeUrl, setYoutubeUrl] = useState('');
+  const youtubeUrlCache = useRef({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -20,24 +23,26 @@ const Albums = () => {
         setLoading(true);
         const token = await getSpotifyToken();
 
+        // Fetch artist name
         const artistResponse = await axios.get(
           `https://api.spotify.com/v1/artists/${rapperId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setRapperName(artistResponse.data.name);
 
+        // Fetch top tracks
         const tracksResponse = await axios.get(
           `https://api.spotify.com/v1/artists/${rapperId}/top-tracks?market=IN`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setTracks(tracksResponse.data.tracks);
 
+        // Fetch albums
         const albumResponse = await axios.get(
           `https://api.spotify.com/v1/artists/${rapperId}/albums?include_groups=album&limit=50`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setAlbums(albumResponse.data.items);
-
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load content. Please try again.');
@@ -50,21 +55,30 @@ const Albums = () => {
   }, [rapperId]);
 
   const fetchYouTubeAudio = async (trackName, artistName) => {
+    const searchKey = `${trackName}-${artistName}`;
+    if (youtubeUrlCache.current[searchKey]) return youtubeUrlCache.current[searchKey];
+
     try {
-      const query = `${trackName} ${artistName}`;
+      const query = `${trackName} ${artistName} official audio`
+        .replace(/[^a-zA-Z0-9 ]/g, '')
+        .trim();
+
       const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
         params: {
-          key: 'AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg',
+          key: YOUTUBE_API_KEY,
           part: 'snippet',
           q: query,
           type: 'video',
-          maxResults: 1
-        }
+          maxResults: 1,
+        },
       });
 
-      const videoId = response.data.items[0]?.id?.videoId;
-      if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+      const video = response.data.items[0];
+      if (video) {
+        const videoId = video.id.videoId;
+        const youtubeEmbed = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        youtubeUrlCache.current[searchKey] = youtubeEmbed;
+        return youtubeEmbed;
       }
     } catch (err) {
       console.error(`YouTube search error for ${trackName} - ${artistName}:`, err);
@@ -154,7 +168,6 @@ const Albums = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

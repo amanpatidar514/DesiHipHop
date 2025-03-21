@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import './Songs.css';
@@ -14,7 +14,7 @@ const Songs = () => {
   const [error, setError] = useState('');
   const [albumName, setAlbumName] = useState('');
   const [selectedSong, setSelectedSong] = useState(null);
-  const [youtubeUrlCache, setYoutubeUrlCache] = useState({});
+  const youtubeUrlCache = useRef({});
 
   const refreshSpotifyToken = async () => {
     try {
@@ -38,7 +38,7 @@ const Songs = () => {
 
   const getYouTubeVideoId = async (songName, artistName) => {
     const searchKey = `${songName}-${artistName}`;
-    if (youtubeUrlCache[searchKey]) return youtubeUrlCache[searchKey];
+    if (youtubeUrlCache.current[searchKey]) return youtubeUrlCache.current[searchKey];
 
     try {
       const query = `${songName} by ${artistName} official audio`
@@ -47,7 +47,7 @@ const Songs = () => {
 
       const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
         params: {
-          key: AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg,
+          key: YOUTUBE_API_KEY,
           part: 'snippet',
           q: query,
           type: 'video',
@@ -59,7 +59,7 @@ const Songs = () => {
       if (video) {
         const videoId = video.id.videoId;
         const youtubeUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-        setYoutubeUrlCache((prev) => ({ ...prev, [searchKey]: youtubeUrl }));
+        youtubeUrlCache.current[searchKey] = youtubeUrl;
         return youtubeUrl;
       }
     } catch (err) {
