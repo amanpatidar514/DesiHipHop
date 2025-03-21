@@ -48,7 +48,15 @@ const Rappers = () => {
           'Young Stunner',
           'Umair',
           'Bali',
-          'Dino James'
+          'Dino James',
+          'Talhah Yunus',
+          'WANT3D',
+          'Chaar Diwaari',
+          'Paradox',
+          'MC Altaf',
+          'Raga',
+          'Panther',
+          'Nazz'
         ];
         
 
