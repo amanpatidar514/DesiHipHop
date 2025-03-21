@@ -45,7 +45,10 @@ const Rappers = () => {
           'Talha Anjum',   // Add Talha Anjum
           'Loka',          // Add Loka
           'Ikka',          // Add Ikka
-          'Young Stunner'  // Add Young Stunner
+          'Young Stunner',
+          'Umair',
+          'Bali',
+          'Dino James'
         ];
         
 
