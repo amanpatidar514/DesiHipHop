@@ -100,6 +100,20 @@ const Albums = () => {
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
 
+      <div className="non-album-section">
+        <h2>All Songs of {rapperName}</h2>
+        <div className="non-album-grid">
+          {nonAlbumTracks.map((track, index) => (
+            <div key={index} className="song-card">
+              <img src={track.image} alt={track.name} className="song-artwork" />
+              <h2>{track.name}</h2>
+              <p className="artist-name">{track.artist}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+
       {/* Top Tracks Section */}
       <div className="tracks-section">
         <h2>Popular Tracks</h2>
