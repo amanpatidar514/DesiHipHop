@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import getSpotifyToken from './getSpotifyToken';
 import './Albums.css';
 
@@ -11,9 +11,8 @@ const Albums = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [rapperName, setRapperName] = useState('');
-  const [rapperImage, setRapperImage] = useState('');
-
-  const navigate = useNavigate();
+  const [selectedTrack, setSelectedTrack] = useState(null);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,7 +25,6 @@ const Albums = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setRapperName(artistResponse.data.name);
-        setRapperImage(artistResponse.data.images[0]?.url || '');
 
         const tracksResponse = await axios.get(
           `https://api.spotify.com/v1/artists/${rapperId}/top-tracks?market=IN`,
@@ -39,6 +37,7 @@ const Albums = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setAlbums(albumResponse.data.items);
+
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load content. Please try again.');
@@ -50,6 +49,36 @@ const Albums = () => {
     if (rapperId) fetchData();
   }, [rapperId]);
 
+  const fetchYouTubeAudio = async (trackName, artistName) => {
+    try {
+      const query = `${trackName} ${artistName}`;
+      const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+        params: {
+          key: 'AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg',
+          part: 'snippet',
+          q: query,
+          type: 'video',
+          maxResults: 1
+        }
+      });
+
+      const videoId = response.data.items[0]?.id?.videoId;
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+      }
+    } catch (err) {
+      console.error(`YouTube search error for ${trackName} - ${artistName}:`, err);
+    }
+
+    return '';
+  };
+
+  const handleTrackClick = async (track) => {
+    setSelectedTrack(track);
+    const ytUrl = await fetchYouTubeAudio(track.name, track.artists[0].name);
+    setYoutubeUrl(ytUrl);
+  };
+
   return (
     <div className="albums-page">
       <h1>{rapperName ? `${rapperName}'s Music` : 'Music'}</h1>
@@ -57,23 +86,16 @@ const Albums = () => {
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
 
-      {/* 🆕 All Songs Card Section (Spotify Songs) */}
-      {rapperImage && (
-        <div className="all-songs-section">
-          <h2>All Songs of {rapperName}</h2>
-          <div className="all-songs-box" onClick={() => navigate(`/songs/${rapperId}`)}>
-            <img src={rapperImage} alt={rapperName} />
-            <p>{rapperName}</p>
-          </div>
-        </div>
-      )}
-
       {/* Top Tracks Section */}
       <div className="tracks-section">
         <h2>Popular Tracks</h2>
         <div className="albums-grid">
           {tracks.map((track) => (
-            <div key={track.id} className="album-card">
+            <div
+              key={track.id}
+              className="album-card"
+              onClick={() => handleTrackClick(track)}
+            >
               <img src={track.album.images[0]?.url} alt={track.name} />
               <h3>{track.name}</h3>
               <p>{track.artists.map(artist => artist.name).join(', ')}</p>
@@ -99,6 +121,40 @@ const Albums = () => {
           )}
         </div>
       </div>
+
+      {/* Audio Playback Popup */}
+      {selectedTrack && youtubeUrl && (
+        <div className="popup">
+          <div className="popup-content dark">
+            <div className="song-info">
+              <img
+                src={selectedTrack.album.images[0]?.url}
+                alt={selectedTrack.name}
+                className="track-image"
+              />
+              <h3>{selectedTrack.name}</h3>
+              <p>{selectedTrack.artists.map(artist => artist.name).join(', ')}</p>
+            </div>
+
+            {/* Hidden YouTube iframe for audio playback */}
+            <div style={{ width: '1px', height: '1px', overflow: 'hidden' }}>
+              <iframe
+                width="1"
+                height="1"
+                src={youtubeUrl}
+                title="YouTube Audio"
+                allow="autoplay"
+                frameBorder="0"
+              />
+            </div>
+
+            <button onClick={() => setSelectedTrack(null)} className="close-button">
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

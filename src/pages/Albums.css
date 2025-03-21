@@ -252,23 +252,3 @@
   transform: scale(1.05);
 }
 
-/* YouTube Videos */
-.youtube-section {
-  margin: 30px 0;
-  width: 100%;
-  text-align: center;
-}
-
-.youtube-videos {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-  padding: 0 20px;
-}
-
-.youtube-videos iframe {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: 10px;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
-}
