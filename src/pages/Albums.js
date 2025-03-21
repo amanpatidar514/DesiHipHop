@@ -6,25 +6,6 @@ import './Albums.css';
 
 const YOUTUBE_API_KEY = 'AIzaSyBeeOGvXNLLNoxEekI1G-BR0e3d5pxTgeg';
 
-// ✅ Dummy non-album tracks to fix the undefined variable error
-const nonAlbumTracks = [
-  {
-    name: 'Freeverse 2',
-    artist: 'Talha Anjum',
-    image: 'https://i.ytimg.com/vi/0YvWkBuvIEM/maxresdefault.jpg',
-  },
-  {
-    name: 'Proof',
-    artist: 'Talha Anjum',
-    image: 'https://i.ytimg.com/vi/IcNPa3vUe_M/maxresdefault.jpg',
-  },
-  {
-    name: 'Garmi',
-    artist: 'Talha Anjum',
-    image: 'https://i.ytimg.com/vi/FY5iSrt6Lkg/maxresdefault.jpg',
-  },
-];
-
 const Albums = () => {
   const { rapperId } = useParams();
   const [albums, setAlbums] = useState([]);
@@ -42,18 +23,21 @@ const Albums = () => {
         setLoading(true);
         const token = await getSpotifyToken();
 
+        // Fetch artist name
         const artistResponse = await axios.get(
           `https://api.spotify.com/v1/artists/${rapperId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setRapperName(artistResponse.data.name);
 
+        // Fetch top tracks
         const tracksResponse = await axios.get(
           `https://api.spotify.com/v1/artists/${rapperId}/top-tracks?market=IN`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setTracks(tracksResponse.data.tracks);
 
+        // Fetch albums
         const albumResponse = await axios.get(
           `https://api.spotify.com/v1/artists/${rapperId}/albums?include_groups=album&limit=50`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -116,19 +100,6 @@ const Albums = () => {
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
 
-      <div className="non-album-section">
-        <h2>All Songs of {rapperName}</h2>
-        <div className="non-album-grid">
-          {nonAlbumTracks.map((track, index) => (
-            <div key={index} className="song-card">
-              <img src={track.image} alt={track.name} className="song-artwork" />
-              <h2>{track.name}</h2>
-              <p className="artist-name">{track.artist}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Top Tracks Section */}
       <div className="tracks-section">
         <h2>Popular Tracks</h2>
@@ -179,6 +150,7 @@ const Albums = () => {
               <p>{selectedTrack.artists.map(artist => artist.name).join(', ')}</p>
             </div>
 
+            {/* Hidden YouTube iframe for audio playback */}
             <div style={{ width: '1px', height: '1px', overflow: 'hidden' }}>
               <iframe
                 width="1"
