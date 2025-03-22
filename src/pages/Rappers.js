@@ -50,7 +50,6 @@ const Rappers = () => {
           'Bali',
           'Dino James',
           'Talhah Yunus',
-          'Uday Pandhi',
           'GAUSH',
           'Chaar Diwaari',
           'Paradox',
