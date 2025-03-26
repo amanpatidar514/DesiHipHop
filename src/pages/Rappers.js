@@ -56,7 +56,14 @@ const Rappers = () => {
           'MC Altaf',
           'Raga',
           'Panther',
-          'Nazz'
+          'Nazz',
+          'Emiway Bantai',
+          'The local train',
+          'Parmish Verma',
+          'Muhfaad',
+          'AP Dhillon',
+          'Raja Kumari',
+          'Bohemia',
         ];
         
 
