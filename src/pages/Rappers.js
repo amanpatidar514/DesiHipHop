@@ -64,6 +64,9 @@ const Rappers = () => {
           'AP Dhillon',
           'Raja Kumari',
           'Bohemia',
+          'aleemrk',
+          'Jokhay',
+          'Rockson'
         ];
         
 
