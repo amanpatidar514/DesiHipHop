@@ -6,6 +6,37 @@ import './Rappers.css';
 const SPOTIFY_CLIENT_ID = '7c51bc90b0884fa5afc2d1420b995a61';
 const SPOTIFY_CLIENT_SECRET = 'b66594a7b0b74f2d8ebce2e715418bbc';
 
+const artistNames = [
+  'Divine', 'Raftaar', 'Badshah', 'Yo Yo Honey Singh', 
+          'MC Stan', 'Seedhe Maut', 'Prabh Deep', 'Kr$na',
+          'EPR', 'Karma', 'King',
+          'Talha Anjum',   // Add Talha Anjum
+          'Loka',          // Add Loka
+          'Ikka',          // Add Ikka
+          'Young Stunner',
+          'Umair',
+          'Bali',
+          'Dino James',
+          'Talhah Yunus',
+          'GAUSH',
+          'Chaar Diwaari',
+          'Paradox',
+          'MC Altaf',
+          'Raga',
+          'Panther',
+          'Nazz',
+          'Emiway Bantai',
+          'The local train',
+          'Parmish Verma',
+          'Muhfaad',
+          'AP Dhillon',
+          'Raja Kumari',
+          'Bohemia',
+          'aleemrk',
+          'Jokhay',
+          'Rockson'
+];
+
 const Rappers = () => {
   const [rappers, setRappers] = useState([]);
   const [loading, setLoading] = useState(true);
